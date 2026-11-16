@@ -123,7 +123,7 @@ fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend
 <header class="journey-header">
 <h1>明湖居聽書</h1>
 <p class="chapter">《老殘遊記》第二回<br>歷山山下古帝遺蹤　明湖湖邊美人絕調</p>
-<p>國中讀的是本回前半部〈大明湖〉，跟著老殘遊湖賞景。這裡接續本回後半部，也是高中國文會讀到的〈明湖居聽書〉。歡迎來到隱藏園地，跟老殘進戲園聽王小玉說書。</p>
+<p>國中讀的是本回前半部〈大明湖〉，跟著老殘遊湖賞景。高中國文的〈王小玉說書〉取材自本回後半部。接下來就跟老殘進戲園，聽王小玉說書。</p>
 <p><strong>你的任務</strong>　完成八站閱讀，集齊八幕《明湖聽書卷》。遇到譬喻就點開意象圖，讀完本站並答完題目，再前往下一站。全程共 22 題，最後交卷看成績與解析。</p>
 <a class="primary" href="#reading">出發，跟老殘去聽書</a>
 <a class="journey-home" href="index.html">返回明湖尋景</a>
@@ -162,16 +162,23 @@ const sections = [
   ['歌聲轉折',10,11,'entranced','老殘與臺下聽眾專心聽書',11,'滿園子的人都屏氣凝神，不敢少動。','順著課文追蹤歌聲陡落、細到無聲、忽又揚起，直到全場喝采。'],
   ['餘音與快板',11,14,'audience','聽眾在戲園木桌旁談論演出，老殘坐在一旁聆聽',12,'餘音繞梁，三日不絕','聽夢湘談餘韻，再從「黑驢段」讀出快板唱得快卻字字清楚的特色。']
 ];
-const readingStrategies = [
-  '把「街上看見的」和「街上聽見的」各畫一處重點，再想想兩者如何連到黃紙上的招貼。',
-  '讀茶房的話時，先找原本的唱法，再找描述白妞學習和改變唱法的動詞。',
-  '把時間詞圈起來，按老殘入園的順序，對照臺上、臺下各有哪些細節。',
-  '沿著「起先、後來」讀，對照彈奏方式怎麼變，臺下反應又怎麼變。',
-  '先讀演唱經過，再讀鄰座對話。試著指出哪些是老殘親耳聽到的，哪些是旁人說的。',
-  '把人物的動作、臺下的反應和歌聲的變化分開讀。遇到譬喻，先想它在寫哪一種感覺，再看圖。',
-  '用手畫一條線跟著歌聲走。每遇到轉折，就回到原文找表示音高、音量或快慢的詞。',
-  '把第一段演唱和後來的「黑驢段」各找一句原文比較，再看聽眾怎麼談自己聽完的感受。'
+const paragraphReadingPrompts = [
+  '從「人煙稠密」讀到轎夫無意間踢倒孩子，看看作者用了哪些動作、哭聲和問話，讓老殘回到鵲華橋後的市街活起來。',
+  '老殘先看到黃紙招貼，再聽到街坊為了聽書想歇業、輪流告假。留意白妞還未登場，作者怎樣透過街談巷議寫出她的號召力。',
+  '在茶房的話裡找出「一聽就會」和「創出這個調兒」。想想白妞如何從學會別家的唱腔，到把各地腔調融入自己的大鼓書。再留意老殘聽完是否已經相信。',
+  '戲明明一點才開唱，老殘十點到卻得花錢找短板凳。把座席擁擠和臺上空蕩的細節放在一起讀，想想這一幕如何印證茶房的預告。',
+  '從十一點讀到將近十二點，留意預留的桌子如何坐滿、看座人怎麼再加短凳，也對照官員彼此招呼和外桌人群說話的樣子。',
+  '對照弦師彈小調時的冷清和用輪指後的喝采。找一找，作者怎樣同時寫出弦音的抑揚頓挫與聽眾反應，為兩位說書人登場鋪路。',
+  '留意三弦、梨花簡、鼓和歌聲依什麼順序響起。對照「新鶯出谷，乳燕歸巢」前後的文字，想像黑妞清脆宛轉、變化多端的唱腔。',
+  '辨認是誰把黑妞誤認作白妞，再讀鄰座如何比較兩人。黑妞已經唱得出色，鄰座的話又讓讀者對還沒出場的白妞有什麼期待？',
+  '從白妞敲簡、點鼓到抬眼環顧，跟著作者看她的動作和眼神。接著對照上段的滿園人聲，想想白妞還沒開唱，氣氛為什麼就變了。',
+  '先分辨哪些譬喻寫聽眾身體的感受，哪些寫聲音本身。再比較鋼絲拋上天和攀登泰山，想想「一下子拔高」與「一層一層升高」聽來有什麼不同。',
+  '順著原文追蹤歌聲從陡落盤旋、低細無聲，到重新揚起並與弦聲相和的過程。最後對照「人弦俱寂」和全場喝采，體會作者怎麼用聲音與寂靜寫出轉折。',
+  '夢湘從讀書時不懂「餘音繞梁」，到親耳聽過才明白。留意他為什麼又提起「三月不知肉味」，作者如何藉聽眾自己的話寫出演唱結束後的影響。',
+  '先找出「越說越快」與「字字清楚」。再想想大小珠子接連落在玉盤上的聲音，怎樣讓人想像快板的節奏和咬字。最後留意敘事者怎麼評價這一段和前一段。',
+  '留意結尾怎麼寫「還有一段」卻把它留到下回。想想這個章回小說常見的收尾，怎樣讓讀者想接著看下去。'
 ];
+
 const alphabet = 'ABCD';
 const esc = value => value.replace(/[&<>]/g, key => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[key]));
 const byId = name => document.getElementById(name);
@@ -492,7 +499,9 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
     const quiz = indexes.length
       ? '<div class="paragraph-quiz"><h4>第 '+number+' 段閱讀題</h4>'+indexes.map(renderQuestion).join('')+'</div>'
       : '';
-    return '<div class="paragraph">'+source+quiz+'</div>';
+    const prompt = '<div class="reading-strategy"><p class="reading-strategy-title"><strong>本段值得你好好閱讀的是：</strong></p>'
+      +'<p>'+esc(paragraphReadingPrompts[number-1])+'</p></div>';
+    return '<div class="paragraph">'+prompt+source+quiz+'</div>';
   }).join('');
   const loading = index === 0 ? '' : ' loading="lazy"';
   const entrance = art === 'bainiu';
@@ -505,8 +514,7 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
     : '';
   const heading = '<div class="station-heading"><p>第 '+(index+1)+' 站／共 '+sections.length+' 站</p><h3 id="station-title-'+index+'" tabindex="-1">'+esc(title)+'</h3></div>';
   const mission = '<p class="station-task"><strong>本站任務</strong>'+esc(task)+'</p>';
-  return '<section class="group station" aria-labelledby="station-title-'+index+'"'+(index===0?'':' hidden')+'>'+heading+illustration+controls+mission
-    +'<div class="reading-strategy"><p class="reading-strategy-title"><strong>本段值得你好好閱讀的是：</strong></p><p>'+esc(readingStrategies[index])+'</p></div>'+paragraphs+'</section>';
+  return '<section class="group station" aria-labelledby="station-title-'+index+'"'+(index===0?'':' hidden')+'>'+heading+illustration+controls+mission+paragraphs+'</section>';
 }).join('');
 
 const entranceButton = byId('play-entrance');
