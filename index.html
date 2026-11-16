@@ -154,7 +154,8 @@ mark{background:linear-gradient(transparent 55%,#f4c96a 55%);color:inherit;font-
 .rmw svg{width:100%;height:auto;max-height:52vh;display:block;border:2px solid #b9a77f;border-radius:4px}
 .pl{cursor:pointer}.pl circle{fill:rgba(255,250,240,.75);stroke:#6b5a44;stroke-width:2}.pl text{font-size:15px;text-anchor:middle;font-weight:700;fill:#3a2e24;paint-order:stroke;stroke:#f4ecd8;stroke-width:4px}
 .pl.on circle{fill:#b23a2a;stroke:#7a2218}.pl.shake{animation:shk .35s}
-.rmsg{font-size:18px;margin:8px 0}.rlist{display:flex;flex-direction:column;gap:6px}
+.route-segments{pointer-events:none;stroke:#254e46;stroke-width:3.5;stroke-linecap:round}
+.rmsg{font-size:18px;margin:8px 0}.rmsg.is-error{color:#9f2926;font-weight:700}.rlist{display:flex;flex-direction:column;gap:6px}
 #textbox{position:fixed;inset:0;z-index:30;background:rgba(30,36,34,.6);display:flex;align-items:center;justify-content:center}
 .tbw{background:var(--paper);border:2px solid var(--line);border-radius:10px;width:min(680px,calc(100% - 28px));max-height:84vh;overflow:auto;padding:14px 20px;box-sizing:border-box;position:relative}
 .tbw h3{margin:0 0 8px;letter-spacing:2px}
@@ -263,6 +264,7 @@ body.vnfull #compass{display:none}
       <path d="M367 24l4 15-4-3-4 3z" fill="#974b38"/>
       <text x="367" y="58" text-anchor="middle" fill="#754637" font-size="12" font-weight="700">北</text>
     </g>
+    <g class="route-segments" aria-hidden="true"></g>
     <g class="pl" data-id="que"><circle class="map-hit" cx="300" cy="262" r="17"/><circle cx="300" cy="262" r="9"/><text x="312" y="286">鵲華橋</text></g>
     <g class="pl" data-id="lixia"><circle class="map-hit" cx="222" cy="168" r="17"/><circle cx="222" cy="168" r="9"/><text x="224" y="203">歷下亭</text></g>
     <g class="pl" data-id="tie"><circle class="map-hit" cx="92" cy="92" r="17"/><circle cx="92" cy="92" r="9"/><text x="92" y="121">鐵公祠</text></g>
@@ -1075,11 +1077,15 @@ journeyMap.querySelector('.map-drawing').appendChild(journeyDrawing);
 
 function setUpRouteExercise(panel,onFinish){
   const markers=[...panel.querySelectorAll('.pl')];
+  const dots=new Map(markers.map(marker=>[marker.dataset.id,marker.querySelector('.map-hit')]));
+  const lines=panel.querySelector('.route-segments');
   const message=panel.querySelector('.rmsg');
   const progress=panel.querySelector('.route-progress');
   const clues=panel.querySelector('.rlist');
   const action=panel.querySelector('.route-action');
   let nextIndex=1, missed=false;
+  lines.replaceChildren();
+  message.classList.remove('is-error');
   clues.replaceChildren(...ROUTE_CLUES.map(quote=>{
     const item=document.createElement('li');
     item.textContent=quote;
@@ -1104,10 +1110,20 @@ function setUpRouteExercise(panel,onFinish){
         tone('bad');
         marker.classList.add('shake');
         setTimeout(()=>marker.classList.remove('shake'),400);
-        message.textContent=id==='qf'?'老殘在鐵公祠前朝南望見千佛山。再讀課文，找他接下來抵達的地方。':'再讀下方課文，看看老殘接著到了哪裡。';
+        message.classList.add('is-error');
+        message.textContent=id==='qf'?'點錯了。千佛山是老殘在鐵公祠前望見的景物。請再選一次。':'點錯了。請讀下方課文，再選老殘下一個抵達的景點。';
         return;
       }
+      const from=dots.get(ROUTE_ORDER[nextIndex-1]);
+      const to=dots.get(id);
+      const line=document.createElementNS(lines.namespaceURI,'line');
+      line.setAttribute('x1',from.getAttribute('cx'));
+      line.setAttribute('y1',from.getAttribute('cy'));
+      line.setAttribute('x2',to.getAttribute('cx'));
+      line.setAttribute('y2',to.getAttribute('cy'));
+      lines.append(line);
       nextIndex++;
+      message.classList.remove('is-error');
       marker.classList.add('on');
       const complete=nextIndex===ROUTE_ORDER.length;
       progress.textContent+=' → '+name+(complete?'（返回）':'');
