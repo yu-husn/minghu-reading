@@ -108,6 +108,15 @@ fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend
 .station-input{scroll-margin-bottom:95px}
 @media(max-width:580px){.station-route{grid-template-columns:repeat(2,minmax(0,1fr))}.station-controls{gap:6px}.station-status{flex:1 0 100%}.station-controls .primary,.station-controls .secondary{min-height:44px;padding:5px 10px}.journey-home{margin:10px 0 0;display:block}}
 
+
+.reading-strategy{margin:8px 0 16px;border:1px solid #abaf95;border-radius:7px;background:#edf0df}
+.reading-strategy summary{min-height:44px;padding:8px 12px;color:#274c3e;cursor:pointer}
+.reading-strategy p{padding:0 12px 10px;font-size:.9rem}
+.source-readback{outline:2px solid #a8782e;outline-offset:5px;border-radius:2px}
+.source-readback .number{font-weight:800}
+.question-sources a{display:inline-flex;align-items:center;min-height:36px;margin:2px;padding:0 7px;border:1px solid #8aab92;border-radius:5px;background:#edf1e3}
+
+.audio-credit{margin:-12px 0 16px;color:#4f594c;font-size:.78rem}
 </style>
 </head>
 <body><main>
@@ -130,6 +139,7 @@ fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend
 <div id="result" role="status" tabindex="-1" hidden></div>
 <div class="station-controls">
 <output class="station-status" id="progress" aria-live="polite"></output>
+<button class="secondary" id="back-to-question" type="button" hidden>回到題目</button>
 <button class="secondary" id="previous-station" type="button" hidden>上一站</button>
 <button class="primary" id="next-station" type="button">下一站</button>
 <button class="primary" id="submit" type="submit" disabled hidden>交卷看解析</button>
@@ -151,6 +161,16 @@ const sections = [
   ['白妞登臺',8,10,'bainiu','白妞王小玉抬眼望向觀眾，臺下聽眾屏息凝神',9,'就這一眼，滿園子裡便鴉雀無聲','從白妞抬眼到開口，找出全場怎麼從喧鬧轉為安靜，歌聲又如何攀高。'],
   ['歌聲轉折',10,11,'entranced','老殘與臺下聽眾專心聽書',11,'滿園子的人都屏氣凝神，不敢少動。','順著課文追蹤歌聲陡落、細到無聲、忽又揚起，直到全場喝采。'],
   ['餘音與快板',11,14,'audience','聽眾在戲園木桌旁談論演出，老殘坐在一旁聆聽',12,'餘音繞梁，三日不絕','聽夢湘談餘韻，再從「黑驢段」讀出快板唱得快卻字字清楚的特色。']
+];
+const readingStrategies = [
+  '把「街上看見的」和「街上聽見的」各畫一處重點，再想想兩者如何連到黃紙上的招貼。',
+  '讀茶房的話時，先找原本的唱法，再找描述白妞學習和改變唱法的動詞。',
+  '把時間詞圈起來，按老殘入園的順序，對照臺上、臺下各有哪些細節。',
+  '沿著「起先、後來」讀，對照彈奏方式怎麼變，臺下反應又怎麼變。',
+  '先讀演唱經過，再讀鄰座對話。試著指出哪些是老殘親耳聽到的，哪些是旁人說的。',
+  '把人物的動作、臺下的反應和歌聲的變化分開讀。遇到譬喻，先想它在寫哪一種感覺，再看圖。',
+  '用手畫一條線跟著歌聲走。每遇到轉折，就回到原文找表示音高、音量或快慢的詞。',
+  '把第一段演唱和後來的「黑驢段」各找一句原文比較，再看聽眾怎麼談自己聽完的感受。'
 ];
 const alphabet = 'ABCD';
 const esc = value => value.replace(/[&<>]/g, key => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[key]));
@@ -177,10 +197,10 @@ function renderQuestion(index) {
   const [question, choices, , paragraphs] = questions[index];
   const options = choices.map((choice, number) =>
     '<label class="choice"><input type="radio" name="q'+index+'" value="'+number+'"><span>'+alphabet[number]+'. '+esc(choice)+'</span></label>').join('');
-  const sources = paragraphs.length > 1
-    ? '<p class="question-sources">對照原文 '+paragraphs.map(paragraphLink).join('、')+'</p>'
-    : '';
   const number = ++questionNumber;
+  const references = paragraphs.map(paragraph =>
+    '<a href="#paragraph-'+paragraph+'" data-return-question="'+number+'">第 '+paragraph+' 段</a>');
+  const sources = '<p class="question-sources">回查原文 '+references.join('')+'</p>';
   return '<fieldset id="question-'+number+'" class="station-input" tabindex="-1" data-question="'+index+'"><legend>'+number+'．'+esc(question)+'</legend>'
     +sources+'<div class="choices">'+options+'</div><div class="feedback" hidden></div></fieldset>';
 }
@@ -480,11 +500,13 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
   const frames = entrance ? '<div class="entrance-frames">'+image+'<span class="entrance-streak" aria-hidden="true"></span><svg class="entrance-serpent" viewBox="0 0 600 400" aria-hidden="true"><path pathLength="100" d="M45 290 C80 244 142 280 170 245 S120 204 178 186 S271 228 310 192 S262 144 323 130 S430 155 475 113 S492 66 555 69" fill="none" stroke="#fff2c1" stroke-width="2.8" stroke-linecap="round"/></svg><p class="entrance-metaphor" hidden></p></div>' : image;
   const illustration = '<figure class="illustration">'+frames+renderCaption(quote,quoteParagraph,{live:entrance})+'</figure>';
   const controls = entrance
-    ? '<div class="entrance-controls"><button id="play-entrance" class="primary" type="button">播放白妞出場與唱書動畫</button><label class="entrance-audio"><input id="entrance-audio" type="checkbox" checked>聲音示意</label><span id="entrance-status" class="entrance-status" role="status"></span></div>'
+    ? '<div class="entrance-controls"><button id="play-entrance" class="primary" type="button">播放白妞出場與唱書動畫</button><label class="entrance-audio"><input id="entrance-audio" type="checkbox" checked>播放女高音與伴奏</label><span id="entrance-status" class="entrance-status" role="status"></span></div>'
+      +'<p class="audio-credit">無詞唱腔示意。女高音錄音取自 <a href="https://zenodo.org/records/1203819">VocalSet</a>（Julia Wilkins、Prem Seetharaman、Alison Wahl、Bryan Pardo），依動畫剪輯和變調，採 <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 授權。</p>'
     : '';
   const heading = '<div class="station-heading"><p>第 '+(index+1)+' 站／共 '+sections.length+' 站</p><h3 id="station-title-'+index+'" tabindex="-1">'+esc(title)+'</h3></div>';
   const mission = '<p class="station-task"><strong>本站任務</strong>'+esc(task)+'</p>';
-  return '<section class="group station" aria-labelledby="station-title-'+index+'"'+(index===0?'':' hidden')+'>'+heading+illustration+controls+mission+paragraphs+'</section>';
+  return '<section class="group station" aria-labelledby="station-title-'+index+'"'+(index===0?'':' hidden')+'>'+heading+illustration+controls+mission
+    +'<details class="reading-strategy"><summary>讀法提示</summary><p>'+esc(readingStrategies[index])+'</p></details>'+paragraphs+'</section>';
 }).join('');
 
 const entranceButton = byId('play-entrance');
@@ -575,82 +597,121 @@ function stopPerformanceAudio() {
   performanceSession = undefined;
 }
 
-function startPerformanceAudio() {
+
+let sopranoRecording;
+
+function loadSopranoRecording() {
+  if (!performanceContext) return Promise.resolve(null);
+  sopranoRecording ??= fetch('audio/minghuju-soprano.wav')
+    .then(response => {
+      if (!response.ok) throw new Error('Soprano recording unavailable');
+      return response.arrayBuffer();
+    })
+    .then(bytes => performanceContext.decodeAudioData(bytes))
+    .catch(() => {
+      sopranoRecording = undefined;
+      return null;
+    });
+  return sopranoRecording;
+}
+
+function scheduleSoprano(context, recording, start, destination, sources) {
+  if (!recording) return;
+  // Three registers of the same singer, measured from the sustained /a/ recording.
+  const low = {hz:265, offset:1.06, rms:.023};
+  const middle = {hz:542, offset:4.32, rms:.09};
+  const high = {hz:720, offset:7.91, rms:.28};
+  const voiceBus = context.createGain();
+  voiceBus.connect(destination);
+
+  const phrases = [
+    [6.37,.75,middle,[365,393,381],.052],
+    [7.16,1.03,middle,[392,415,394],.060],
+    [8.7,1.03,middle,[383,440,414],.062],
+    [9.9,.87,middle,[413,391],.059],
+    [11.52,1.4,middle,[390,429,412],.057],
+    [13.36,1.54,middle,[411,474,439,416],.063],
+    [15.36,1.24,middle,[441,468,421],.056],
+    [16.91,1.21,middle,[415,459,433],.068],
+    [18.5,2.53,middle,[432,470,507,552],.091],
+    [21.4,2.35,high,[553,742,710,759,721],.116],
+    [24.5,2.65,high,[554,643,603,673],.099],
+    [27.7,2.34,high,[647,731,688,772],.107],
+    [30.6,2.02,high,[751,830,791,883],.118],
+    [33.3,1.91,high,[818,906,869,957],.128],
+    [35.7,.58,high,[892,711,540],.108],
+    [36.19,1.82,middle,[565,438,511,403,465],.081],
+    [38.1,3.05,middle,[464,541,436,502,414,466,380],.070],
+    [41.6,2.11,middle,[386,352,315],.050],
+    [48.6,2.42,low,[241,278,319,353],.035],
+    [51.5,1.49,high,[546,646,904,976,871],.125],
+    [53.21,1.27,high,[708,825,734,853],.102],
+    [54.7,1.13,high,[644,758,929,773],.109],
+    [55.95,1.52,high,[665,799,962,884,927],.121],
+    [57.75,1.17,high,[625,785,661,802],.099],
+    [59.02,1.17,high,[670,836,719,887],.103],
+    [60.26,1.94,high,[762,923,801,943],.113,true],
+  ];
+
+  for (const [at,duration,take,pitches,level,abrupt] of phrases) {
+    const t = start+at;
+    const end = t+duration;
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    source.buffer = recording;
+    source.playbackRate.setValueAtTime(pitches[0]/take.hz,t);
+    pitches.slice(1).forEach((pitch,i) =>
+      source.playbackRate.linearRampToValueAtTime(pitch/take.hz,t+duration*(i+1)/(pitches.length-1)));
+    const volume = level/take.rms;
+    const release = abrupt ? .025 : Math.min(.34,duration*.32);
+    gain.gain.setValueAtTime(0,t);
+    gain.gain.linearRampToValueAtTime(volume,t+Math.min(.12,duration*.16));
+    gain.gain.setValueAtTime(volume*.8,end-release);
+    gain.gain.linearRampToValueAtTime(0,end);
+    source.connect(gain).connect(voiceBus);
+    source.start(t,take.offset);
+    source.stop(end);
+    sources.push(source);
+  }
+}
+
+function startPerformanceAudio(recording) {
   const context = performanceContext;
   if (!context) return;
   const start = context.currentTime + .03;
   const output = context.createGain();
-  output.gain.value = entranceAudioOption.checked ? .36 : 0;
+  output.gain.value = entranceAudioOption.checked ? .68 : 0;
   output.connect(context.destination);
   const sources = [];
   performanceSession = {output, sources};
-  const voice = context.createPeriodicWave(
-    new Float32Array([0, 1, .33, .15, .14, .045]),
-    new Float32Array(6)
-  );
-  function tone(at, length, pitches, level, type = 'voice', tail = .02) {
-    const t = start + at;
-    const end = t + length;
+  const effects = context.createGain();
+  const strings = context.createGain();
+  effects.gain.value = .78;
+  strings.gain.value = .58;
+  effects.connect(output);
+  strings.connect(output);
+  scheduleSoprano(context,recording,start,output,sources);
+
+  function tone(at, length, pitches, level, type) {
+    const t = start+at;
+    const end = t+length;
     const osc = context.createOscillator();
     const gain = context.createGain();
-    if (type === 'voice') {
-      osc.setPeriodicWave(voice);
-      const vibrato = context.createOscillator();
-      const depth = context.createGain();
-      vibrato.frequency.value = 5.1;
-      depth.gain.value = 3.8;
-      vibrato.connect(depth).connect(osc.frequency);
-      vibrato.start(t);
-      vibrato.stop(end);
-      sources.push(vibrato);
-    } else {
-      osc.type = type;
-    }
+    osc.type = type;
     osc.frequency.setValueAtTime(pitches[0], t);
     pitches.slice(1).forEach((pitch,i) =>
       osc.frequency.linearRampToValueAtTime(pitch,t + length*(i+1)/(pitches.length-1)));
     gain.gain.setValueAtTime(0, t);
     gain.gain.linearRampToValueAtTime(level, t + Math.min(.09, length*.14));
-    gain.gain.linearRampToValueAtTime(level*tail, end-.018);
+    gain.gain.linearRampToValueAtTime(level*.02, end-.018);
     gain.gain.linearRampToValueAtTime(0,end);
-    osc.connect(gain).connect(output);
+    osc.connect(gain).connect(type==='triangle' ? strings : effects);
     osc.start(t);
     osc.stop(end);
     sources.push(osc);
   }
-  // The sound illustrates the prose: two drum taps, then a soft opening.
   tone(1.75,.18,[150,62],.27,'sine');
   tone(2.4,.18,[150,62],.23,'sine');
-  [
-    [6.37,.73,[233,255,248],.12],
-    [7.16,1.05,[258,276,263],.13],
-    [8.7,1.08,[250,296,277,271],.14],
-    [9.9,.83,[276,258],.14],
-    [11.52,1.4,[247,280,270],.13],
-    [13.36,1.52,[262,314,292,276],.13],
-    [15.36,1.24,[277,296,262],.12],
-    [16.91,1.21,[262,296,280],.13],
-    // The high thread bends and continues to climb, in successive terraces.
-    [18.5,2.6,[278,310,355,420,448],.25],
-    [21.4,2.7,[470,747,709,752,718],.27],
-    [24.5,2.8,[535,630,583,660],.24],
-    [27.7,2.55,[645,720,678,762],.25],
-    [30.6,2.34,[738,824,788,865],.27],
-    [33.3,2.3,[828,903,869,934],.27],
-    // Plunge, winding turns, then thin away to silence.
-    [35.7,2.3,[875,420,338,486,372,420],.28],
-    [38.1,3.16,[408,532,376,487,339,438,278],.22],
-    [41.6,2.13,[266,242,206,174],.16],
-    // After the pause: the faint tone, a flare, then voice over plucked strings.
-    [48.6,2.55,[157,175,212,288],.095],
-    [51.5,1.6,[338,573,804,988,858],.28],
-    [53.21,1.28,[688,834,734,852],.24],
-    [54.7,1.22,[523,700,963,769],.24],
-    [55.95,1.5,[658,794,983,880,930],.25],
-    [57.75,1.2,[620,785,653,804],.23],
-    [59.02,1.2,[659,836,718,892],.23],
-    [60.26,1.94,[748,925,786,943],.24, 'voice', .91],
-  ].forEach(phrase => tone(...phrase));
   for (let i=0;i<27;i++) {
     const pitches = [392,587,494,659,440,523,698,587];
     const pitch = pitches[i%pitches.length];
@@ -671,7 +732,7 @@ function startPerformanceAudio() {
   clapColor.type = 'bandpass';
   clapColor.frequency.value = 1200;
   clapColor.Q.value = .6;
-  clapColor.connect(output);
+  clapColor.connect(effects);
   for (let i=0;i<66;i++) {
     const source = context.createBufferSource();
     const gain = context.createGain();
@@ -687,7 +748,7 @@ function startPerformanceAudio() {
 entranceAudioOption.addEventListener('change', () => {
   if (entranceAudioOption.checked) unlockPerformanceAudio();
   if (performanceSession) performanceSession.output.gain.setTargetAtTime(
-    entranceAudioOption.checked ? .36 : 0,performanceContext.currentTime,.025);
+    entranceAudioOption.checked ? .68 : 0,performanceContext.currentTime,.025);
 });
 
 async function loadEntranceFrames() {
@@ -741,11 +802,14 @@ entranceButton.addEventListener('click', async () => {
     stopEntrance();
     return;
   }
-  if (entranceAudioOption.checked) unlockPerformanceAudio();
+  unlockPerformanceAudio();
   entranceButton.disabled = true;
   entranceStatus.textContent = '載入動畫中';
+  let recording;
   try {
-    entranceFrameImages ??= await loadEntranceFrames();
+    [entranceFrameImages, recording] = await Promise.all([
+      entranceFrameImages ?? loadEntranceFrames(), loadSopranoRecording()
+    ]);
   } catch {
     entranceStatus.textContent = '動畫載入失敗，請再試一次。';
     return;
@@ -753,10 +817,14 @@ entranceButton.addEventListener('click', async () => {
     entranceButton.disabled = false;
   }
 
+  if (entranceFrames.closest('.station').hidden) {
+    entranceStatus.textContent = '';
+    return;
+  }
   entrancesPlaying = true;
-  entranceStatus.textContent = '';
+  entranceStatus.textContent = recording || !entranceAudioOption.checked ? '' : '女高音音檔未能載入';
   entranceButton.textContent = '停止動畫';
-  try { startPerformanceAudio(); } catch { stopPerformanceAudio(); }
+  try { startPerformanceAudio(recording); } catch { stopPerformanceAudio(); }
   const [, firstFrame, firstCaption] = entranceCues[0];
   showEntranceFrame(firstFrame, firstCaption);
   entranceTimers = entranceCues.slice(1).map(([delay, frame, caption, paragraph]) =>
@@ -772,6 +840,8 @@ const route = byId('station-route');
 const previousStation = byId('previous-station');
 const nextStation = byId('next-station');
 let activeStation = 0;
+let returnQuestion;
+const backToQuestion = byId('back-to-question');
 
 route.innerHTML = sections.map(([title],index) =>
   '<li><button type="button" data-station-link="'+index+'"><span>'+(index+1)+'　'+esc(title)+'</span>'
@@ -789,7 +859,8 @@ function updateProgress() {
   const last = activeStation===stations.length-1;
   const count = form.querySelectorAll('input[type=radio]:checked').length;
   byId('progress').textContent = (graded?'回看第 '+(activeStation+1)+' 站　':'')+'已收集 '+collected+' / '+stations.length
-    +' 幕 · 已作答 '+count+' / '+questions.length+' 題';
+    +' 幕 · 已作答 '+count+' / '+questions.length+' 題'
+    +(graded ? '' : ' · 本站 '+(stationFields[activeStation].length-missingAnswers(activeStation).length)+' / '+stationFields[activeStation].length+' 題');
   stationButtons.forEach((button,index) => {
     const here = index===activeStation;
     button.disabled = !graded && !here && firstPending!==-1 && index>firstPending;
@@ -805,8 +876,20 @@ function updateProgress() {
   submit.disabled = graded || count < questions.length;
 }
 
+function clearReadingReturn() {
+  readingGroups.querySelector('.source-readback')?.classList.remove('source-readback');
+  backToQuestion.hidden = true;
+  returnQuestion = undefined;
+}
+
+backToQuestion.addEventListener('click', () => {
+  if (!returnQuestion) return;
+  const hash = '#question-'+returnQuestion;
+  jumpToSource(hash);
+});
 function showStation(index, {focus = true, scroll = true} = {}) {
   if (!stations[index]) return;
+  clearReadingReturn();
   if (index!==activeStation && entrancesPlaying) stopEntrance();
   activeStation = index;
   stations.forEach((station,i) => { station.hidden = i!==index; });
@@ -836,7 +919,7 @@ route.addEventListener('click', event => {
 
 function jumpToSource(hash) {
   const target = byId(hash.slice(1));
-  if (!target || !target.matches('.source, .station-input')) return;
+  if (!target || !target.matches('.source, .station-input, .station-heading h3')) return;
   const index = stations.indexOf(target.closest('.station'));
   showStation(index,{focus:false,scroll:false});
   target.scrollIntoView({block:'start'});
@@ -864,7 +947,17 @@ document.addEventListener('click', event => {
   const link = event.target.closest('a[href^="#paragraph-"], a[href^="#question-"]');
   if (!link) return;
   const hash = link.getAttribute('href');
-  if (location.hash===hash) jumpToSource(hash);
+  if (link.dataset.returnQuestion) {
+    event.preventDefault();
+    jumpToSource(hash);
+    const target = byId(hash.slice(1));
+    target.classList.add('source-readback');
+    returnQuestion = link.dataset.returnQuestion;
+    backToQuestion.textContent = '回到第 '+returnQuestion+' 題';
+    backToQuestion.hidden = false;
+  } else if (location.hash===hash) {
+    jumpToSource(hash);
+  }
 });
 window.addEventListener('hashchange', () => {
   if (location.hash==='#reading' && graded) showRecap();
