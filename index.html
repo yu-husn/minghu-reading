@@ -155,6 +155,10 @@ mark{background:linear-gradient(transparent 55%,#f4c96a 55%);color:inherit;font-
 .pl{cursor:pointer}.pl circle{fill:rgba(255,250,240,.75);stroke:#6b5a44;stroke-width:2}.pl text{font-size:15px;text-anchor:middle;font-weight:700;fill:#3a2e24;paint-order:stroke;stroke:#f4ecd8;stroke-width:4px}
 .pl.on circle{fill:#b23a2a;stroke:#7a2218}.pl.shake{animation:shk .35s}
 .route-segments{pointer-events:none;stroke:#254e46;stroke-width:3.5;stroke-linecap:round}
+.route-segments .is-highlighted{stroke:#9e3d26;stroke-width:6}
+.route-segments .sight-line{stroke:#2f5975;stroke-width:4;stroke-dasharray:7 5}
+.route-clue{display:block;width:100%;min-height:44px;padding:5px 9px;text-align:left;font:inherit;color:inherit;background:#fffaf0;border:1px solid #b9a77f;border-radius:6px;cursor:pointer}
+.route-clue[aria-pressed="true"]{background:#f7dfae;border-color:#9e3d26}
 .rmsg{font-size:18px;margin:8px 0}.rmsg.is-error{color:#9f2926;font-weight:700}.rlist{display:flex;flex-direction:column;gap:6px}
 #textbox{position:fixed;inset:0;z-index:30;background:rgba(30,36,34,.6);display:flex;align-items:center;justify-content:center}
 .tbw{background:var(--paper);border:2px solid var(--line);border-radius:10px;width:min(680px,calc(100% - 28px));max-height:84vh;overflow:auto;padding:14px 20px;box-sizing:border-box;position:relative}
@@ -1051,12 +1055,12 @@ const SCROLL_ART={
 
 const ROUTE_ORDER=['que','lixia','tie','shui','he','que'];
 const ROUTE_CLUES=[
-  '午後便步行至鵲華橋邊，雇了一隻小船，盪起雙槳。朝北不遠，便到歷下亭前。',
-  '復行下船，向西盪去，不甚遠，又到了鐵公祠畔。',
-  '到了鐵公祠前，朝南一望，只見對面千佛山上，梵宇僧樓……',
-  '繞著曲折的迴廊，到了荷池東面，就是個圓門。圓門東邊有三間舊房，有個破匾，上題「古水仙祠」四個字。',
-  '過了水仙祠……盪到歷下亭的後面。兩邊荷葉荷花將船夾住。',
-  '老殘隨手摘了幾個蓮蓬，一面吃著，一面船已到了鵲華橋畔了。'
+  ['que','lixia','午後便步行至鵲華橋邊，雇了一隻小船，盪起雙槳。朝北不遠，便到歷下亭前。'],
+  ['lixia','tie','復行下船，向西盪去，不甚遠，又到了鐵公祠畔。'],
+  ['tie','qf','到了鐵公祠前，朝南一望，只見對面千佛山上，梵宇僧樓……'],
+  ['tie','shui','繞著曲折的迴廊，到了荷池東面，就是個圓門。圓門東邊有三間舊房，有個破匾，上題「古水仙祠」四個字。'],
+  ['shui','he','過了水仙祠……盪到歷下亭的後面。兩邊荷葉荷花將船夾住。'],
+  ['he','que','老殘隨手摘了幾個蓮蓬，一面吃著，一面船已到了鵲華橋畔了。']
 ];
 const routeMap=document.getElementById('routeMap');
 const journeyMap=document.getElementById('journeyMap');
@@ -1077,16 +1081,20 @@ journeyMap.querySelector('.map-drawing').appendChild(journeyDrawing);
 
 function setUpRouteExercise(panel,onFinish){
   const markers=[...panel.querySelectorAll('.pl')];
-  const dots=new Map(markers.map(marker=>[marker.dataset.id,marker.querySelector('.map-hit')]));
+  const stops=new Map(markers.map(marker=>[marker.dataset.id,{
+    dot:marker.querySelector('.map-hit'),
+    name:marker.querySelector('text').textContent
+  }]));
   const lines=panel.querySelector('.route-segments');
   const message=panel.querySelector('.rmsg');
   const progress=panel.querySelector('.route-progress');
   const clues=panel.querySelector('.rlist');
   const action=panel.querySelector('.route-action');
+  const routeLines=new Map();
   let nextIndex=1, missed=false;
   lines.replaceChildren();
   message.classList.remove('is-error');
-  clues.replaceChildren(...ROUTE_CLUES.map(quote=>{
+  clues.replaceChildren(...ROUTE_CLUES.map(([, ,quote])=>{
     const item=document.createElement('li');
     item.textContent=quote;
     return item;
@@ -1095,9 +1103,50 @@ function setUpRouteExercise(panel,onFinish){
   message.textContent='老殘從鵲華橋出發。讀下方課文，依序點選接下來抵達的景點。';
   progress.textContent='鵲華橋（出發）';
   if(action) action.onclick=()=>onFinish(!missed);
+
+  function addLine(fromId,toId){
+    const from=stops.get(fromId).dot;
+    const to=stops.get(toId).dot;
+    const line=document.createElementNS(lines.namespaceURI,'line');
+    line.setAttribute('x1',from.getAttribute('cx'));
+    line.setAttribute('y1',from.getAttribute('cy'));
+    line.setAttribute('x2',to.getAttribute('cx'));
+    line.setAttribute('y2',to.getAttribute('cy'));
+    lines.append(line);
+    return line;
+  }
+
+  function enableClueReview(){
+    let selectedButton=null;
+    for(const [index,[fromId,toId,quote]] of ROUTE_CLUES.entries()){
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='route-clue';
+      button.textContent=quote;
+      button.setAttribute('aria-pressed','false');
+      button.onclick=()=>{
+        selectedButton?.setAttribute('aria-pressed','false');
+        selectedButton=button;
+        button.setAttribute('aria-pressed','true');
+        lines.querySelector('.is-highlighted')?.classList.remove('is-highlighted');
+        lines.querySelector('.sight-line')?.remove();
+        if(toId==='qf'){
+          addLine(fromId,toId).classList.add('sight-line');
+          message.textContent='這句寫的是從鐵公祠朝南望見千佛山。';
+        }else{
+          routeLines.get(toId).classList.add('is-highlighted');
+          const from=stops.get(fromId).name;
+          const to=stops.get(toId).name;
+          message.textContent='這句寫的是從'+from+'到'+to+'。';
+        }
+      };
+      clues.children[index].replaceChildren(button);
+    }
+  }
+
   for(const marker of markers){
     const id=marker.dataset.id;
-    const name=marker.querySelector('text').textContent;
+    const {name}=stops.get(id);
     marker.classList.toggle('on',id===ROUTE_ORDER[0]);
     marker.classList.remove('shake');
     marker.setAttribute('role','button');
@@ -1114,14 +1163,7 @@ function setUpRouteExercise(panel,onFinish){
         message.textContent=id==='qf'?'點錯了。千佛山是老殘在鐵公祠前望見的景物。請再選一次。':'點錯了。請讀下方課文，再選老殘下一個抵達的景點。';
         return;
       }
-      const from=dots.get(ROUTE_ORDER[nextIndex-1]);
-      const to=dots.get(id);
-      const line=document.createElementNS(lines.namespaceURI,'line');
-      line.setAttribute('x1',from.getAttribute('cx'));
-      line.setAttribute('y1',from.getAttribute('cy'));
-      line.setAttribute('x2',to.getAttribute('cx'));
-      line.setAttribute('y2',to.getAttribute('cy'));
-      lines.append(line);
+      routeLines.set(id,addLine(ROUTE_ORDER[nextIndex-1],id));
       nextIndex++;
       message.classList.remove('is-error');
       marker.classList.add('on');
@@ -1129,7 +1171,8 @@ function setUpRouteExercise(panel,onFinish){
       progress.textContent+=' → '+name+(complete?'（返回）':'');
       if(complete){
         tone('ding');
-        message.textContent='完成！老殘最後回到了鵲華橋。';
+        message.textContent='完成！點選下方課文，看看文句對應的路線。';
+        enableClueReview();
         if(action) action.hidden=false;
       }else{
         tone('pop');
