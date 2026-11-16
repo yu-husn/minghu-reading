@@ -110,7 +110,7 @@ fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend
 
 
 .reading-strategy{margin:8px 0 16px;border:1px solid #abaf95;border-radius:7px;background:#edf0df}
-.reading-strategy summary{min-height:44px;padding:8px 12px;color:#274c3e;cursor:pointer}
+.reading-strategy .reading-strategy-title{padding:8px 12px 4px;color:#274c3e;font-size:1rem}
 .reading-strategy p{padding:0 12px 10px;font-size:.9rem}
 .source-readback{outline:2px solid #a8782e;outline-offset:5px;border-radius:2px}
 .source-readback .number{font-weight:800}
@@ -506,7 +506,7 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
   const heading = '<div class="station-heading"><p>第 '+(index+1)+' 站／共 '+sections.length+' 站</p><h3 id="station-title-'+index+'" tabindex="-1">'+esc(title)+'</h3></div>';
   const mission = '<p class="station-task"><strong>本站任務</strong>'+esc(task)+'</p>';
   return '<section class="group station" aria-labelledby="station-title-'+index+'"'+(index===0?'':' hidden')+'>'+heading+illustration+controls+mission
-    +'<details class="reading-strategy"><summary>讀法提示</summary><p>'+esc(readingStrategies[index])+'</p></details>'+paragraphs+'</section>';
+    +'<div class="reading-strategy"><p class="reading-strategy-title"><strong>本段值得你好好閱讀的是：</strong></p><p>'+esc(readingStrategies[index])+'</p></div>'+paragraphs+'</section>';
 }).join('');
 
 const entranceButton = byId('play-entrance');
