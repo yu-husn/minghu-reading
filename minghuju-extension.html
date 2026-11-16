@@ -59,6 +59,20 @@ fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend
 #result{border:2px solid #678677;border-radius:7px;margin-top:12px;padding:10px 14px;background:#e4efe4;scroll-margin-top:12px}
 .controls{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}.controls .primary{margin:0}[hidden]{display:none!important}
 @media(max-width:620px){.choices{grid-template-columns:1fr}}
+
+.metaphor-gallery{margin:14px 0;border:1px solid #9cae98;border-radius:8px;background:#eef1e5}
+.metaphor-gallery summary{min-height:48px;padding:10px 14px;color:#1b594a;cursor:pointer}
+.metaphor-gallery[open] summary{border-bottom:1px solid #9cae98}
+.metaphor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px}
+.metaphor-card{position:relative;min-width:0;margin:0;overflow:hidden;border:1px solid #b5aca0;border-radius:8px;background:#fff9ec}
+.metaphor-card img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;background:#dbcbb1}
+.metaphor-card figcaption{padding:10px 12px 13px;line-height:1.6}
+.metaphor-card blockquote{margin:.36em 0 .45em;padding-left:.65em;border-left:3px solid #ae8a51;color:#4b4133;font-family:"Noto Serif TC","PMingLiU",serif}
+.metaphor-title{display:block;color:#265b4c}
+.metaphor-label{position:absolute;top:8px;left:8px;max-width:calc(100% - 16px);padding:.25em .55em;border-radius:4px;background:#23382ff5;color:#fff6df;font-size:.74rem;line-height:1.4}
+.metaphor-description{font-size:.88rem}
+@media(max-width:515px){.metaphor-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body><main>
@@ -72,6 +86,7 @@ fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend
 <section id="reading">
 <h2>分段閱讀與作答</h2>
 <p>讀一段，答一組題目。跨段題可點段號回看前文。全卷 22 題，答完即可交卷看解析。</p>
+<p>有譬喻的段落下方可展開「意象圖」，對照作者怎麼用眼前能想像的事物，描寫人物、歌聲與聽眾的感受。</p>
 <form id="quiz-form">
 <div id="reading-groups"></div>
 <div id="result" role="status" tabindex="-1" hidden></div>
@@ -142,6 +157,227 @@ const applauseIllustration = '<figure class="illustration"><img class="section-a
   +'" alt="表演結束，滿場聽眾抬頭叫好，有人拍掌喝采" loading="lazy" decoding="async">'
   +renderCaption(applauseQuote,11)+'</figure>';
 
+
+const metaphorScenes = {
+  "3": [
+    [
+      "prodigy",
+      "天生的怪物",
+      "此人是天生的怪物！",
+      "茶房用「怪物」誇稱王小玉天賦非凡，接著說她年紀輕輕就學會了說書。",
+      "想像中，年少的王小玉練習打鼓和敲簡，旁人驚訝於她的本領",
+      "誇稱中的譬喻"
+    ],
+    [
+      "blending-tunes",
+      "把腔調裝進鼓書",
+      "種種的腔調，他都拿來裝在這大鼓書的調兒裡面。",
+      "把「融合不同唱腔」說成把東西「裝」進去，寫王小玉如何把各地腔調融入自己的大鼓書。",
+      "各色絲線在一面鼓上匯成一股"
+    ]
+  ],
+  "6": [
+    [
+      "dried-peel",
+      "風乾福橘皮",
+      "彷彿風乾福橘皮似的",
+      "乾橘皮皺巴巴、凹凸不平，用來形容弦師滿臉疙瘩。",
+      "皺褶和凹點明顯的風乾橘皮"
+    ],
+    [
+      "many-strings",
+      "多弦多指",
+      "恍若有幾十根弦，幾百個指頭在那裡彈似的",
+      "弦師用輪指彈奏，聲音又密又多，聽來彷彿許多人同時撥弦。",
+      "密密排列的金色琴弦與撥弦的指影"
+    ]
+  ],
+  "7": [
+    [
+      "duck-egg",
+      "鴨蛋臉",
+      "長長鴨蛋臉兒",
+      "用細長的橢圓形容黑妞的臉形。",
+      "一枚放在稻草上的淺色鴨蛋"
+    ],
+    [
+      "oriole",
+      "新鶯出谷",
+      "如新鶯出谷",
+      "以新鶯飛出山谷的意象，形容黑妞歌聲清脆悅耳。",
+      "一隻黃鶯飛出晨光中的山谷"
+    ],
+    [
+      "swallow",
+      "乳燕歸巢",
+      "乳燕歸巢",
+      "以小燕歸巢的意象，形容黑妞歌聲婉轉。",
+      "一隻小燕飛向屋簷下的泥巢"
+    ]
+  ],
+  "9": [
+    [
+      "melon-seed",
+      "瓜子臉",
+      "瓜子臉兒",
+      "用上半部較寬、尖端較窄的瓜子，形容白妞的臉形。",
+      "一粒尖端朝下的瓜子仁"
+    ],
+    [
+      "autumn-water",
+      "秋水",
+      "如秋水",
+      "以澄澈的秋水，形容白妞眼神清亮。",
+      "映出遠山和天空的澄澈秋水"
+    ],
+    [
+      "cold-star",
+      "寒星",
+      "如寒星",
+      "以暗夜中清亮的星光，形容白妞雙眼有神。",
+      "深藍夜空中一點清亮星光"
+    ],
+    [
+      "gem",
+      "寶珠",
+      "如寶珠",
+      "以寶珠的圓潤光澤，形容白妞雙眼明亮。",
+      "深色布面上一顆圓潤明亮的寶珠"
+    ],
+    [
+      "quicksilver",
+      "兩丸黑水銀",
+      "如白水銀裡頭養著兩丸黑水銀",
+      "用銀白與漆黑的對照，寫白妞的眼睛黑白分明、光彩動人。",
+      "銀白液面上並排兩顆烏黑發亮的圓珠"
+    ],
+    [
+      "court-hush",
+      "皇帝出場般安靜",
+      "比皇帝出來還要靜悄得多呢",
+      "拿皇帝出場作比較，再誇張地說連落針都聽得見，寫出全場靜得出奇。",
+      "想像中的宮殿門前，眾人在皇帝現身時靜立",
+      "比較與誇飾"
+    ]
+  ],
+  "10": [
+    [
+      "warm-iron",
+      "熨斗熨過",
+      "五臟六腑裡，像熨斗熨過，無一處不伏貼。",
+      "從布被熨平的感覺，想像聽眾全身放鬆、心裡舒坦。",
+      "古式熨斗把有摺痕的絲布熨平"
+    ],
+    [
+      "ginseng-fruit",
+      "吃了人參果",
+      "三萬六千個毛孔，像吃了人參果，無一個毛孔不暢快。",
+      "以吃了仙果的想像，寫聽完那幾句唱腔後全身暢快。",
+      "葉間一顆帶有淡金光澤的想像仙果"
+    ],
+    [
+      "silver-wire",
+      "鋼絲拋入天際",
+      "忽然拔了一個尖兒，像一線鋼絲拋入天際",
+      "細而明亮的鋼絲直向上拋，讓人想像歌聲突然拔尖。",
+      "一線細亮銀絲斜拋入高空"
+    ],
+    [
+      "taishan",
+      "攀登泰山",
+      "恍如由傲來峰西面攀登泰山的景象",
+      "翻過傲來峰再見扇子崖，到了扇子崖又見南天門，比喻白妞的歌聲一層比一層高。",
+      "泰山的層層山峰，遠處山門在更高處",
+      null,
+      true
+    ]
+  ],
+  "11": [
+    [
+      "mountain-serpent",
+      "黃山飛蛇",
+      "如一條飛蛇在黃山三十六峰半中腰裡盤旋穿插",
+      "飛蛇在群峰之間盤旋，比喻歌聲陡降後仍能靈活迴旋。",
+      "一條淡金色的飛蛇在雲霧中的山峰半腰盤旋",
+      null,
+      false
+    ],
+    [
+      "underground-tone",
+      "地底傳聲",
+      "彷彿有一點聲音從地底下發出",
+      "歌聲低到一度聽不見，隔了一段時間，才傳來一點微弱的聲音。",
+      "幽暗石板縫中浮出一圈微弱的光紋"
+    ],
+    [
+      "fireworks",
+      "五色煙火",
+      "像放那東洋煙火，一個彈子上天，隨化作千百道五色火光，縱橫散亂。",
+      "從一點微聲突然揚起，轉為無數聲音一齊迸發，就像煙火在空中炸開。",
+      "夜空中由一點升起、綻開成多道色光的煙火",
+      null,
+      true
+    ],
+    [
+      "spring-dawn",
+      "花塢春曉",
+      "有如花塢春曉，好鳥亂鳴。",
+      "花園中群鳥此起彼落，用來形容白妞的歌聲和三弦伴奏交織。",
+      "春日清晨的庭園，枝頭和空中有多隻鳥雀",
+      null,
+      true
+    ],
+    [
+      "thunder",
+      "轟然雷動",
+      "這時臺下叫好之聲，轟然雷動。",
+      "以雷聲形容全場喝采又突然又響亮，和前一句「人弦俱寂」形成對比。",
+      "深色雲層間一道閃電劃過山脊",
+      "譬喻想像"
+    ]
+  ],
+  "12": [
+    [
+      "echo",
+      "餘音繞梁",
+      "餘音繞梁，三日不絕",
+      "夢湘引用古語，用聲音彷彿還在屋梁間迴繞，形容唱完後幾天仍忘不了。",
+      "空戲園上方的木樑間有淡淡金色聲紋",
+      "引用中的譬喻"
+    ],
+    [
+      "forgotten-meal",
+      "三月不知肉味",
+      "三月不知肉味",
+      "夢湘借孔子聽樂入迷的典故，來比擬聽完說書後久久不能忘懷的感受。",
+      "一名出神的聽眾，面前的肉食原封未動",
+      "用典類比"
+    ]
+  ],
+  "13": [
+    [
+      "jade-plate",
+      "珠落玉盤",
+      "大珠小珠落玉盤。",
+      "借白居易的詩句寫「黑驢段」快而清脆，連唱得極快時也字字清楚。",
+      "大小不同的珍珠接連落在淺綠玉盤上",
+      "引用中的譬喻"
+    ]
+  ]
+};
+function renderMetaphorGallery(number) {
+  const cards = metaphorScenes[number];
+  if (!cards) return '';
+  return '<details class="metaphor-gallery" id="metaphors-'+number+'">'
+    +'<summary>看第 '+number+' 段的意象圖（'+cards.length+' 張）</summary>'
+    +'<div class="metaphor-grid">'+cards.map(([id,title,quote,description,alt,kind,reuse]) =>
+      '<figure class="metaphor-card"><img width="768" height="512" loading="lazy" decoding="async" src="img/minghuju-'
+      +(reuse ? '' : 'metaphor-')+id+'.jpg" alt="'+esc(alt)+'"><span class="metaphor-label">'+esc(kind||'譬喻想像')
+      +'</span><figcaption><strong class="metaphor-title">'+esc(title)+'</strong><blockquote>'+esc(quote)
+      +'</blockquote><p class="metaphor-description">'+esc(description)+'</p></figcaption></figure>'
+    ).join('')+'</div></details>';
+}
+
 readingGroups.innerHTML = sections.map(([title,start,end,art,description,quoteParagraph,quote], index) => {
   const paragraphs = passage.slice(start,end).map((text, i) => {
     const number = start+i+1;
@@ -151,7 +387,7 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
       ? '<div class="paragraph-quiz"><h4>第 '+number+' 段閱讀題</h4>'+indexes.map(renderQuestion).join('')+'</div>'
       : '';
     const reaction = number===10 ? listenerIllustration : number===11 ? applauseIllustration : '';
-    return '<div class="paragraph">'+source+reaction+quiz+'</div>';
+    return '<div class="paragraph">'+source+reaction+renderMetaphorGallery(number)+quiz+'</div>';
   }).join('');
   const loading = index === 0 ? '' : ' loading="lazy"';
   const entrance = art === 'bainiu';
