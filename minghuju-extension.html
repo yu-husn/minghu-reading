@@ -16,6 +16,13 @@ section{margin-top:28px;scroll-margin-top:12px}.group,fieldset{background:var(--
 .group{padding:clamp(12px,3vw,23px)}.group h3{color:var(--jade);margin:0 0 12px}.paragraph+.paragraph{margin-top:22px}
 .illustration{position:relative;isolation:isolate;overflow:hidden;margin:0 0 16px;border-radius:8px;background:#4b4639}
 .section-art{display:block;width:100%;height:auto}
+.entrance-frames{position:relative}
+.entrance-frame{position:absolute;inset:0;opacity:0;transition:opacity .22s ease}
+.entrance-frame.is-visible{opacity:1}
+.entrance-controls{display:flex;gap:10px;align-items:center;margin:-5px 0 18px}
+.entrance-controls .primary{margin:0}
+.entrance-status{font-size:.85rem}
+@media(prefers-reduced-motion:reduce){.entrance-frame{transition:none}}
 .illustration figcaption{position:absolute;inset:auto 0 0;padding:clamp(10px,3vw,28px);background:linear-gradient(0deg,#17201df5,#17201ddd 72%,#17201d00);color:#fff6df;text-align:center;text-shadow:0 1px 3px #18201e}
 .illustration .quote-text{display:block;font-family:"Noto Serif TC","PMingLiU",serif;font-size:clamp(17px,3.2vw,28px);letter-spacing:.035em}
 .illustration .quote-source{display:block;font-size:clamp(12px,2vw,15px);color:#f3d9a1}
@@ -59,7 +66,7 @@ const questions = [["作者在寫到「說鼓書」招子之前，先寫鵲華�
 const sections = [
   ['街頭招貼與戲園盛況',0,5,'arrival','老殘在濟南街上駐足看招貼，身旁有人挑擔、推車和抬轎',2,'居中寫著「說鼓書」三個大字'],
   ['三弦與黑妞登場',5,8,'heiniu','黑妞在戲臺上手持梨花簡和鼓捶，身旁坐著三弦樂手',7,'字字清脆，聲聲宛轉'],
-  ['王小玉登場與聲音變化',8,11,'bainiu','王小玉在明湖居戲臺上說書，臺下聽眾屏息凝神',9,'就這一眼，滿園子裡便鴉雀無聲'],
+  ['王小玉登場與聲音變化',8,11,'bainiu','白妞王小玉在明湖居戲臺上抬眼望向觀眾，臺下聽眾屏息凝神',9,'就這一眼，滿園子裡便鴉雀無聲'],
   ['聽眾回響與黑驢段',11,14,'audience','聽眾在戲園的木桌旁談論演出，老殘坐在一旁聆聽',12,'餘音繞梁，三日不絕']
 ];
 const alphabet = 'ABCD';
@@ -105,10 +112,93 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
     return '<div class="paragraph">'+source+quiz+'</div>';
   }).join('');
   const loading = index === 0 ? '' : ' loading="lazy"';
-  const illustration = '<figure class="illustration"><img class="section-art" width="1536" height="1024" src="img/minghuju-'+art+'.jpg" alt="'+esc(description)+'"'+loading+' decoding="async">'
-    +'<figcaption><span class="quote-text">'+esc(quote)+'</span><span class="quote-source">課文第 '+quoteParagraph+' 段</span></figcaption></figure>';
-  return '<section class="group"><h3>'+esc(title)+'（第 '+(start+1)+'–'+end+' 段）</h3>'+illustration+paragraphs+'</section>';
+  const entrance = art === 'bainiu';
+  const image = '<img class="section-art" width="1536" height="1024" src="img/minghuju-'+(entrance?'bainiu-glance':art)+'.jpg" alt="'+esc(description)+'"'+loading+' decoding="async">';
+  const frames = entrance ? '<div class="entrance-frames">'+image+'</div>' : image;
+  const illustration = '<figure class="illustration">'+frames
+    +'<figcaption><span class="quote-text"'+(entrance?' aria-live="polite"':'')+'>'+esc(quote)
+    +'</span><span class="quote-source">課文第 '+quoteParagraph+' 段</span></figcaption></figure>';
+  const controls = entrance
+    ? '<div class="entrance-controls"><button id="play-entrance" class="primary" type="button">播放白妞出場動畫</button><span id="entrance-status" class="entrance-status" role="status"></span></div>'
+    : '';
+  return '<section class="group"><h3>'+esc(title)+'（第 '+(start+1)+'–'+end+' 段）</h3>'+illustration+controls+paragraphs+'</section>';
 }).join('');
+
+const entranceButton = byId('play-entrance');
+const entranceStatus = byId('entrance-status');
+const entranceFrames = document.querySelector('.entrance-frames');
+const entranceCaption = entranceFrames.nextElementSibling.querySelector('.quote-text');
+const lastEntranceCaption = entranceCaption.textContent;
+const entranceCues = [
+  [0, 'lowered', '半低著頭出來，立在半桌後面'],
+  [1750, 'tap', '又將鼓捶子輕輕的點了兩下'],
+  [2050, 'lowered'],
+  [2400, 'tap'],
+  [2700, 'lowered'],
+  [3200, 'glance', '方抬起頭來，向臺下一盼'],
+  [5050, 'glance', lastEntranceCaption]
+];
+
+let entrancesPlaying = false;
+let entranceTimers = [];
+let entranceFrameImages;
+
+async function loadEntranceFrames() {
+  const sources = ['lowered', 'tap'];
+  const images = sources.map(frame => {
+    const image = new Image(1536, 1024);
+    image.className = 'section-art entrance-frame';
+    image.alt = '';
+    image.setAttribute('aria-hidden', 'true');
+    image.src = 'img/minghuju-bainiu-'+frame+'.jpg';
+    return image;
+  });
+  await Promise.all(images.map(image => image.decode()));
+  entranceFrames.append(...images);
+  return Object.fromEntries(sources.map((frame, index) => [frame, images[index]]));
+}
+
+function showEntranceFrame(frame, caption) {
+  for (const [name, image] of Object.entries(entranceFrameImages)) {
+    const visible = name === 'lowered' ? frame !== 'glance' : frame === name;
+    image.classList.toggle('is-visible', visible);
+  }
+  if (caption) entranceCaption.textContent = caption;
+}
+
+function stopEntrance() {
+  entranceTimers.forEach(clearTimeout);
+  entranceTimers = [];
+  entrancesPlaying = false;
+  showEntranceFrame('glance', lastEntranceCaption);
+  entranceButton.textContent = '重播白妞出場動畫';
+}
+
+entranceButton.addEventListener('click', async () => {
+  if (entrancesPlaying) {
+    stopEntrance();
+    return;
+  }
+  entranceButton.disabled = true;
+  entranceStatus.textContent = '載入動畫中';
+  try {
+    entranceFrameImages ??= await loadEntranceFrames();
+  } catch {
+    entranceStatus.textContent = '動畫載入失敗，請再試一次。';
+    return;
+  } finally {
+    entranceButton.disabled = false;
+  }
+
+  entrancesPlaying = true;
+  entranceStatus.textContent = '';
+  entranceButton.textContent = '停止動畫';
+  const [, firstFrame, firstCaption] = entranceCues[0];
+  showEntranceFrame(firstFrame, firstCaption);
+  entranceTimers = entranceCues.slice(1).map(([delay, frame, caption]) =>
+    setTimeout(() => showEntranceFrame(frame, caption), delay));
+  entranceTimers.push(setTimeout(stopEntrance, 6600));
+});
 
 const fields = [...readingGroups.querySelectorAll('fieldset')];
 function updateProgress() {
