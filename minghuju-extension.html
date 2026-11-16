@@ -38,6 +38,7 @@ section{margin-top:28px;scroll-margin-top:12px}.group,fieldset{background:var(--
 .entrance-serpent.is-visible path{animation-play-state:running}
 @keyframes snake-through-mist{0%{stroke-dashoffset:12;opacity:0}16%,83%{opacity:1}100%{stroke-dashoffset:-100;opacity:0}}
 @media(prefers-reduced-motion:reduce){.entrance-serpent path{animation:none;stroke-dasharray:none;opacity:.65}}
+.entrance-metaphor{position:absolute;z-index:2;inset:clamp(8px,2vw,18px) auto auto clamp(8px,2vw,18px);max-width:calc(100% - 16px);padding:.3em .6em;border:1px solid #f1d29c;border-radius:5px;background:#23382ff5;color:#fff6df;line-height:1.45;font-size:clamp(12px,2.3vw,17px);font-weight:700}
 .entrance-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-5px 0 18px}
 .entrance-controls .primary{margin:0}
 .entrance-status,.entrance-audio{font-size:.85rem}.entrance-audio{display:inline-flex;align-items:center;gap:.35em;min-height:44px;cursor:pointer}.entrance-audio input{accent-color:var(--jade)}
@@ -155,7 +156,7 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
   const loading = index === 0 ? '' : ' loading="lazy"';
   const entrance = art === 'bainiu';
   const image = '<img class="section-art" width="1536" height="1024" src="img/minghuju-'+(entrance?'bainiu-glance':art)+'.jpg" alt="'+esc(description)+'"'+loading+' decoding="async">';
-  const frames = entrance ? '<div class="entrance-frames">'+image+'<span class="entrance-streak" aria-hidden="true"></span><svg class="entrance-serpent" viewBox="0 0 600 400" aria-hidden="true"><path pathLength="100" d="M45 290 C80 244 142 280 170 245 S120 204 178 186 S271 228 310 192 S262 144 323 130 S430 155 475 113 S492 66 555 69" fill="none" stroke="#fff2c1" stroke-width="2.8" stroke-linecap="round"/></svg></div>' : image;
+  const frames = entrance ? '<div class="entrance-frames">'+image+'<span class="entrance-streak" aria-hidden="true"></span><svg class="entrance-serpent" viewBox="0 0 600 400" aria-hidden="true"><path pathLength="100" d="M45 290 C80 244 142 280 170 245 S120 204 178 186 S271 228 310 192 S262 144 323 130 S430 155 475 113 S492 66 555 69" fill="none" stroke="#fff2c1" stroke-width="2.8" stroke-linecap="round"/></svg><p class="entrance-metaphor" hidden></p></div>' : image;
   const illustration = '<figure class="illustration">'+frames+renderCaption(quote,quoteParagraph,{live:entrance})+'</figure>';
   const controls = entrance
     ? '<div class="entrance-controls"><button id="play-entrance" class="primary" type="button">播放白妞出場與唱書動畫</button><label class="entrance-audio"><input id="entrance-audio" type="checkbox" checked>聲音示意</label><span id="entrance-status" class="entrance-status" role="status"></span></div>'
@@ -166,11 +167,19 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
 const entranceButton = byId('play-entrance');
 const entranceStatus = byId('entrance-status');
 const entranceFrames = document.querySelector('.entrance-frames');
+const entranceMetaphorLabel = entranceFrames.querySelector('.entrance-metaphor');
 const entranceStreak = entranceFrames.querySelector('.entrance-streak');
 const entranceAudioOption = byId('entrance-audio');
 const entranceCaption = entranceFrames.nextElementSibling.querySelector('.quote-text');
 const entranceSource = entranceCaption.nextElementSibling;
 const lastEntranceCaption = entranceCaption.textContent;
+const entranceMetaphors = {
+  wire: '譬喻想像｜鋼絲拋入天際：歌聲突然拔高',
+  taishan: '譬喻想像｜攀登泰山：歌聲一層層升高',
+  huangshan: '譬喻想像｜飛蛇穿過群峰：歌聲迴旋轉折',
+  fireworks: '譬喻想像｜煙火迸開：歌聲陡然揚起，眾音並發',
+  birds: '譬喻想像｜春園群鳥齊鳴：歌聲與三弦相和'
+};
 const entranceCues = [
   [0, 'lowered', '半低著頭出來，立在半桌後面'],
   [1750, 'tap', '又將鼓捶子輕輕的點了兩下'],
@@ -207,7 +216,7 @@ const entranceCues = [
   [48600, 'singing-soft', '彷彿有一點聲音從地底下發出', 11],
   [51500, 'fireworks', '忽又揚起，像放那東洋煙火', 11],
   [54700, 'fireworks', '隨化作千百道五色火光，縱橫散亂。', 11],
-  [57700, 'birds', '那彈弦子的亦全用輪指，忽大忽小', 11],
+  [57700, 'singing-open', '那彈弦子的亦全用輪指，忽大忽小', 11],
   [59400, 'birds', '同他那聲音相和相合，有如花塢春曉，好鳥亂鳴。', 11],
   [62200, 'glance', '忽聽霍然一聲，人弦俱寂。', 11],
   [64600, 'applause', applauseQuote, 11]
@@ -369,7 +378,7 @@ async function loadEntranceFrames() {
     image.setAttribute('aria-hidden', 'true');
     image.dataset.frame = frame;
     const prefix = stills.includes(frame) ? 'img/minghuju-bainiu-' : 'img/minghuju-';
-    image.src = prefix+frame+'.jpg';
+    image.src = prefix+(frame==='birds' ? 'spring-dawn' : frame)+'.jpg';
     return image;
   });
   await Promise.all(images.map(image => image.decode()));
@@ -378,6 +387,9 @@ async function loadEntranceFrames() {
 }
 
 function showEntranceFrame(frame, caption, paragraph = 9) {
+  const metaphor = entranceMetaphors[frame];
+  entranceMetaphorLabel.textContent = metaphor || '';
+  entranceMetaphorLabel.hidden = !metaphor;
   entranceStreak.classList.toggle('is-visible',frame==='wire');
   entranceFrames.querySelector('.entrance-serpent').classList.toggle('is-visible',frame==='huangshan');
   if (frame==='wire') frame = 'singing-open';
