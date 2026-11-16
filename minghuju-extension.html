@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>明湖居聽書｜進階閱讀</title>
+<style>
+:root{--ink:#213c34;--jade:#275a4d;--gold:#ebcd91;--paper:#fff9ec;--line:#cdbf9f;color:var(--ink);background:#eee9dc;font:700 clamp(17px,1.9vw,20px)/1.68 "Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif}
+*{box-sizing:border-box}body{margin:0}main{max-width:1000px;margin:auto;padding:24px clamp(14px,4vw,40px) 60px}header{background:#1c4137;color:#fff7e5;padding:clamp(18px,5vw,44px);border-radius:13px}
+h1,h2,p{margin:0}h1{font-size:clamp(2.1rem,6vw,3.4rem);letter-spacing:.05em;line-height:1.2}h2{font-size:1.45rem;margin-bottom:8px}header p+p{margin-top:11px}
+.chapter{margin:17px 0;border-block:1px solid #8ba591;padding:11px 0;color:#f0d796}
+.primary{display:inline-block;margin-top:12px;min-height:48px;padding:8px 16px;border:1px solid transparent;border-radius:7px;background:var(--gold);color:#253b2d;font:inherit;text-decoration:none;cursor:pointer}
+.primary:disabled{cursor:default;opacity:.6}:focus-visible{outline:3px solid #c2742c;outline-offset:3px}a{color:var(--jade);text-underline-offset:4px}
+section{margin-top:28px;scroll-margin-top:12px}.group,fieldset{background:var(--paper);border:1px solid var(--line);border-radius:8px}details{margin:9px 0}summary{min-height:48px;padding:.5em .75em;cursor:pointer;color:var(--jade)}
+.source{border-top:1px solid var(--line);padding:12px clamp(12px,3vw,23px);line-height:1.9}.source p+p{margin-top:1em}.source p{scroll-margin-top:16px}.number{font-size:.84em;color:#853b31;margin-right:.5em}
+fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend{max-width:100%;padding:0 .4em;line-height:1.5}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.choice{display:flex;gap:.6em;align-items:flex-start;min-height:52px;border:1px solid var(--line);border-radius:6px;background:#f3eddd;padding:9px;cursor:pointer}
+.choice input{flex:none;width:1.05em;height:1.05em;margin:.35em 0 0;accent-color:var(--jade)}.choice:has(input:checked){background:#e0ebe0;border-color:var(--jade)}
+.choice.correct{background:#dcebdc;border-color:#467457}.choice.incorrect{background:#f6dfda;border-color:#944238}
+.feedback{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}.feedback p+p{margin-top:5px}.feedback .key{color:var(--jade)}
+#result{border:2px solid #678677;border-radius:7px;margin-top:12px;padding:10px 14px;background:#e4efe4;scroll-margin-top:12px}
+.controls{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}.controls .primary{margin:0}[hidden]{display:none!important}
+@media(max-width:620px){.choices{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<header>
+<h1>明湖居聽書</h1>
+<p class="chapter">《老殘遊記》第二回<br>歷山山下古帝遺蹤　明湖湖邊美人絕調</p>
+<p>國中國文課讀的是本回前半部〈大明湖〉，跟著老殘遊湖賞景。高中國文課會讀後半部〈明湖居聽書〉，跟著他走進戲園，聽王小玉說書。</p>
+<p>歡迎各位優秀的閱讀者進入這個隱藏園地，做進階挑戰。</p>
+<a class="primary" href="#reading">進入明湖居</a>
+</header>
+<section id="reading"><h2>後半回原文</h2><div id="passage"></div><a href="#quiz">前往 22 題閱讀挑戰</a></section>
+<section id="quiz">
+<h2>進階閱讀挑戰</h2>
+<p>讀出作者如何鋪陳王小玉登場，又怎麼把聲音寫得彷彿看得見。答完 22 題即可交卷，查看正解、解析與原文出處。</p>
+<div id="result" role="status" tabindex="-1" hidden></div>
+<form id="quiz-form"><div id="question-list"></div><div class="controls">
+<button class="primary" id="submit" disabled>交卷看解析</button>
+<button class="primary" id="restart" type="button" hidden>重新作答</button>
+<output id="progress" aria-live="polite"></output><a href="#reading">回到原文</a>
+</div></form>
+</section>
+</main>
+<script>
+const passage = ["到了鵲華橋，才覺得人煙稠密，也有挑擔子的，也有推小車子的，也有坐二人抬小藍呢轎子的。轎子後面，一個跟班的戴個紅纓帽子，膀子底下夾個護書，拼命價奔，一面用手中擦汗，一面低著頭跑。街上五六歲的孩子不知避人，被那轎夫無意踢倒一個，他便哇哇的哭起。他的母親趕忙跑來問：「誰碰倒你的？誰碰倒你的？」那個孩子只是哇哇的哭，並不說話。問了半天，才帶哭說了一句道：「抬轎子的！」他母親抬頭看時，轎子早已跑的有二里多遠了。那婦人牽了孩子，嘴裡不住咭咭咕咕的罵著，就回去了。","老殘從鵲華橋往南，緩緩向小布政司街走去。一抬頭，見那牆上貼了一張黃紙，有一尺長，七八寸寬的光景。居中寫著「說鼓書」三個大字，旁邊一行小字是「二十四日明湖居」。那紙還未十分乾，心知是方才貼的，只不知道這是甚麼事情，別處也沒有見過這樣招子。一路走著，一路盤算，只聽得耳邊有兩個挑擔子的說道：「明兒白妞說書，我們可以不必做生意，來聽書罷。」又走到街上、聽鋪子裡櫃臺上有人說道：「前次白妞說書是你告假的，明兒的書，應該我告假了。」一路行來，街談巷議，大半都是這話，心裡詫異道：「白妞是何許人？說的是何等樣書，為甚一紙招貼，便舉國若狂如此？」信步走來，不知不覺已到高陞店口。","進得店去，茶房便來回道：「客人，用什麼夜膳？」老殘一一說過，就順便問道：「你們此地說鼓書是個甚麼玩意兒，何以驚動這麼許多的人？」茶房說：「客人，你不知道。這說鼓書本是山東鄉下的土調，用一面鼓、兩片梨花簡，名叫『梨花大鼓』，演說些前人的故事。本也沒甚稀奇，自從王家出了這個白妞、黑妞姊妹兩個，這白妞名字叫做王小玉，此人是天生的怪物！他十二三歲時就學會了這說書的本事。他卻嫌這鄉下的調兒沒甚麼出奇，他就常到戲園裡看戲，所有甚麼西皮、二簧、梆子腔等唱。一聽就會；甚麼余三勝、程長庚、張二奎等人的調子，他一聽也就會唱。仗著他的喉嚨，要多高有多高；他的中氣，要多長有多長。他又把那南方的甚麼崑腔、小曲，種種的腔調，他都拿來裝在這大鼓書的調兒裡面。不過二三年工夫，創出這個調兒，竟至無論南北高下的人，聽了他唱書，無不神魂顛倒。現在已有招子，明兒就唱。你不信，去聽一聽就知道了。只是要聽還要早去，他雖是一點鐘開唱，若到十點鐘去，便沒有坐位的。」老殘聽了，也不甚相信。","次日六點鐘起，先到南門內看了舜井。又出南門，到歷山腳下，看看相傳大舜昔日耕田的地方。及至回店，已有九點鐘的光景。趕忙吃了飯，走到明湖居，才不過十點鐘時候。那明湖居本是個大戲園子，戲臺前有一百多張桌子。那知進了園門，園子裡面已經坐的滿滿的了。只有中間七八張桌子還無人坐，桌子卻都貼著「撫院定」、「學院定」等類紅紙條兒。老殘看了半天，無處落腳，只好袖子裡送了看坐兒的二百個錢，才弄了一張短板凳，在人縫裡坐下。看那戲臺上，只擺了一張半桌，桌子上放了一面板鼓，鼓上放了兩個鐵片兒，心裡知道這就是所謂梨花簡了。旁邊放了一個三弦子，半桌後面放了兩張椅子，並無一個人在臺上。偌大的個戲臺，空空洞洞，別無他物，看了不覺有些好笑。園子裡面，頂著籃子賣燒餅油條的有一二十個，都是為那不吃飯來的人買了充飢的。","到了十一點鐘，只見門口轎子漸漸擁擠，許多官員都著了便衣，帶著家人，陸續進來。不到十二點鐘，前面幾張空桌俱已滿了，不斷還有人來，看坐兒的也只是搬張短凳，在夾縫中安插。這一群人來了，彼此招呼，有打千兒的，有作揖的，大半打千兒的多。高談闊論，說笑自如。這十幾張桌子外，看來都是做生意的人，又有些像是本地讀書人的樣子，大家都嘁嘁喳喳的在那裡說閒話。因為人太多了，所以說的甚麼話都聽不清楚，也不去管他。","到了十二點半鐘，看那臺上，從後臺簾子裡面，出來一個男人。穿了一件藍布長衫，長長的臉兒，一臉疙瘩，彷彿風乾福橘皮似的，甚為醜陋，但覺得那人氣味到還沉靜。出得臺來，並無一語，就往半桌後面左手一張椅子上坐下。慢慢的將三弦子取來，隨便和了和弦，彈了一兩個小調，人也不甚留神去聽。後來彈了一枝大調，也不知道叫什麼牌子。只是到後來，全用輪指，那抑揚頓挫，入耳動心，恍若有幾十根弦，幾百個指頭在那裡彈似的。這時臺下叫好的聲音不絕於耳，卻也壓不下那弦子去。這曲彈罷，就歇了手，旁邊有人送上茶來。","停了數分鐘時，簾子裡面出來一個姑娘，約有十六七歲，長長鴨蛋臉兒，梳了一個抓髻，戴了一副銀耳環，穿了一件藍布外褂兒，一條藍布褲子，都是黑布鑲滾的。雖是粗布衣裳，到十分潔淨。來到半桌後面右手椅子上坐下。那彈弦子的便取了弦子，錚錚鏦鏦彈起。這姑娘便立起身來，左手取了梨花簡，夾在指頭縫裡，便丁丁當當的敲，與那弦子聲音相應。右手持了鼓捶子，凝神聽那弦子的節奏。忽羯鼓一聲，歌喉遽發，字字清脆，聲聲宛轉，如新鶯出谷，乳燕歸巢，每句七字，每段數十句，或緩或急，忽高忽低。其中轉腔換調之處，百變不窮，覺一切歌曲腔調俱出其下，以為觀止矣。","旁坐有兩人，其一人低聲問那人道：「此想必是白妞了罷？」其一人道：「不是。這人叫黑妞，是白妞的妹子。他的調門兒都是白妞教的，若比白妞，還不曉得差多遠呢！他的好處人說得出，白妞的好處人說不出；他的好處人學的到，白妞的好處人學不到。你想，這幾年來，好玩耍的誰不學他們的調兒呢？就是窯子裡的姑娘，也人人都學，只是頂多有一兩句到黑妞的地步。若白妞的好處，從沒有一個人能及他十分裡的一分的。」說著的時候，黑妞早唱完，後面去了。這時滿園子裡的人，談心的談心，說笑的說笑。賣瓜子、落花生、山裡紅、核桃仁的，高聲喊叫著賣，滿園子裡聽來都是人聲。","正在熱鬧哄哄的時節，只見那後臺裡，又出來了一位姑娘，年紀約十八九歲，裝束與前一個毫無分別。瓜子臉兒，白淨麵皮，相貌不過中人以上之姿，只覺得秀而不媚，清而不寒。半低著頭出來，立在半桌後面，把梨花簡了當了幾聲。煞是奇怪，只是兩片頑鐵，到他手裡，便有了五音十二律似的。又將鼓捶子輕輕的點了兩下，方抬起頭來，向臺下一盼。那雙眼睛，如秋水，如寒星，如寶珠，如白水銀裡頭養著兩丸黑水銀，左右一顧一看，連那坐在遠遠牆角子裡的人，都覺得王小玉看見我了，那坐得近的更不必說。就這一眼，滿園子裡便鴉雀無聲，比皇帝出來還要靜悄得多呢，連一根針跌在地下都聽得見響！","王小玉便啟朱脣，發皓齒，唱了幾句書兒。聲音初不甚大，只覺入耳有說不出來的妙境。五臟六腑裡，像熨斗熨過，無一處不伏貼。三萬六千個毛孔，像吃了人參果，無一個毛孔不暢快。唱了十數句之後，漸漸的越唱越高，忽然拔了一個尖兒，像一線鋼絲拋入天際，不禁暗暗叫絕。那知他於那極高的地方，尚能迴環轉折。幾囀之後，又高一層，接連有三四疊，節節高起。恍如由傲來峰西面攀登泰山的景象，初看傲來峰削壁千仞，以為上與天通。及至翻到傲來峰頂，才見扇子崖更在傲來峰上。及至翻到扇子崖，又見南天門更在扇子崖上。愈翻愈險，愈險愈奇。","那王小玉唱到極高的三四疊後，陡然一落，又極力騁其千迴百折的精神，如一條飛蛇在黃山三十六峰半中腰裡盤旋穿插。頃刻之間，周匝數遍。從此以後，愈唱愈低，愈低愈細，那聲音漸漸的就聽不見了。滿園子的人都屏氣凝神，不敢少動。約有兩三分鐘之久，彷彿有一點聲音從地底下發出。這一出之後，忽又揚起，像放那東洋煙火，一個彈子上天，隨化作千百道五色火光，縱橫散亂。這一聲飛起，即有無限聲音俱來並發。那彈弦子的亦全用輪指，忽大忽小，同他那聲音相和相合，有如花塢春曉，好鳥亂鳴。耳朵忙不過來，不曉得聽那一聲的為是。正在撩亂之際，忽聽霍然一聲，人弦俱寂。這時臺下叫好之聲，轟然雷動。","停了一會，鬧聲稍定，只聽那臺下正座上，有一個少年人，不到三十歲光景，是湖南口音，說道：「當年讀書，見古人形容歌聲的好處，有那『餘音繞梁，三日不絕』的話，我總不懂。空中設想，餘音怎樣會得繞梁呢？又怎會三日不絕呢？及至聽了小玉先生說書，才知古人措辭之妙。每次聽他說書之後，總有好幾天耳朵裡無非都是他的書，無論做什麼事，總不入神，反覺得『三日不絕』，這『三日』二字下得太少，還是孔子『三月不知肉味』，『三月』二字形容得透徹些！」旁邊人都說道：「夢湘先生論得透闢極了！『於我心有戚戚焉』！」","說著，那黑妞又上來說了一段，底下便又是白妞上場。這一段，聞旁邊人說，叫做「黑驢段」。聽了去，不過是一個士子見一個美人，騎了一個黑驢走過去的故事。將形容那美人，先形容那黑驢怎樣怎樣好法，待鋪敘到美人的好處，不過數語，這段書也就完了。其音節全是快板，越說越快。白香山詩云：「大珠小珠落玉盤。」可以盡之。其妙處在說得極快的時候，聽的人彷彿都趕不上聽，他卻字字清楚，無一字不送到人耳輪深處。這是他的獨到，然比著前一段卻未免遜一籌了。","這時不過五點鐘光景，算計王小玉應該還有一段。不知那一段又是怎樣好法，究竟如何，且聽下回分解。"];
+const questions = [["作者在寫到「說鼓書」招子之前，先寫鵲華橋上的挑擔者、推車人和匆忙的轎子。後面又寫挑擔者和店員談聽書。這些街景一起起了什麼作用？",["讓讀者看出老殘準備離開濟南，只好順道向街坊打聽","用熱鬧的市街和不同人的議論，讓說書盛況先在場外出現","從官員乘轎趕路推知劇場即將開唱，交代演出延遲的原因","交代高陞店門前的爭執，解釋老殘為何改住明湖居"],1,[1,2],"市街先呈現人群活動，招貼出現後，再由挑擔人和店員的議論寫消息傳遍各處，白妞出場前已見其號召力。"],["老殘起初不太相信茶房說十點到就沒有座位。哪一組情報最能讓讀者知道茶房所言有據？",["說書用板鼓和梨花簡，臺上也擺有三弦與兩把椅子","茶房說王小玉能學南北腔調，場內也有各種身分的聽眾","前一晚有人說要歇業聽書，劇場門口也有人販賣吃食","說書一點才開始，十點桌席已滿，老殘還得付錢找短凳"],3,[3,4],"同一組線索包含表演與到場的時間差和找不到座位的實際後果，最能直接印證茶房的預告。"],["茶房說王小玉一聽就會唱別人的曲調，又把各地曲調放進大鼓書。哪個概括保留了這段的兩層意思？",["能迅速掌握既有曲調，也能融會不同聲腔創出新調","能演唱各地曲調，也能請不同流派的名角同臺說書","學熟山東傳統曲調，再以原本的腔調表演南方故事","擅長用板鼓控制節奏，再把北方戲曲改成以三弦伴奏"],0,[3],"前一層是聽過即可模仿，後一層是把各家曲調吸收進大鼓書，創造自己的聲腔。"],["三弦樂手出場時幾乎無人留神，後來臺下叫好聲不斷。這個變化主要從哪裡寫出他的技藝？",["從樂手換上正式衣服寫起，描出外形如何改變觀眾印象","從樂手開始介紹曲牌寫起，說明聽眾如何辨認所彈曲調","從聽眾注意與反應的轉變，襯出輪指演奏的感染力","從樂手叫人送茶的過程，帶出聽眾等候演出的時間"],2,[6],"起初聽眾沒有特別留神，輪指彈奏後叫好聲不斷。讀者從聽眾的反應感受到技巧的力量。"],["作者先將黑妞的表演寫得精妙，再讓鄰座說白妞更難模仿。這兩層安排合在一起，最能讓讀者得到什麼印象？",["黑妞是先登臺的配角，作者藉鄰座介紹縮短她和白妞的演出","黑妞已達很高水準，這個起點使讀者更期待白妞能高到哪裡","兩人裝束與樂器相近，鄰座的談話預告她們將一同登臺","兩人的技法各有專長，鄰座的談話說明聽眾分成兩派"],1,[7,8],"先讓黑妞的技藝成為一個很高的標準，再讓旁人指出白妞的造詣更難企及。白妞尚未出場，期待已經被拉高。"],["黑妞退場後滿園喧鬧，白妞只往臺下一望，場內便靜了。這個前後對照最直接表現什麼？",["黑妞與白妞演出之間空檔很長，讓觀眾有時間起身走動","觀眾看到白妞和黑妞的服裝相同，一時分不清臺上站著誰","戲園賣零嘴的聲音太大，白妞只好停下敲擊等待秩序恢復","白妞還未開唱，就已能抓住滿場觀眾的注意力"],3,[8,9],"退場後的熱鬧是對照背景。白妞一盼，遠近聽眾都覺得被看見，並立刻安靜，凸顯登場的吸引力。"],["「連一根針跌在地下都聽得見響」安排在白妞環顧臺下之後，這句最主要在證明什麼？",["極小的聲音也清楚可聞，凸顯人群因專注而瞬間安靜","臺下聽眾一直在尋找落針的方向，表現戲園非常寬廣","王小玉動作有節奏，落針聲和鼓聲可以同時聽到","戲臺到牆角的距離很遠，觀眾仍聽得見伴奏而為之喝采"],0,[9],"落針可聞是誇飾。作者藉這個想像讓讀者體會由喧鬧轉成全場屏息的反差。"],["白妞剛開唱，作者用熨斗與人參果形容聽眾的感受。這兩個譬喻有什麼共同的寫法？",["用故事背景交代觀眾的日常飲食，表現聽書進入濟南人的生活","用兩件可見的物品描出聲音的形狀，表現歌喉筆直地向上升","把聽覺經驗寫成遍及身體的伏貼與暢快，讓感受具體可想","把演唱寫成身體承受的重量和壓力，表現音聲逐漸變得沉重"],2,[10],"熨斗的伏貼與人參果帶來的暢快，都把難以描寫的聲音轉成身體能想像的感覺。"],["同樣寫高音，「一線鋼絲拋入天際」與接下來描寫攀登泰山，各抓住聲音哪一種變化？",["前者寫高處的迴旋，後者寫旋律從高處直落","前者寫突拔的細高音，後者寫越過一層又升一層","前者寫逐層升高的過程，後者寫高音突然停歇","前者寫多聲齊響，後者寫低音慢慢變得微細"],1,[10],"鋼絲拋起是一瞬間的拔高，登泰山的三處地勢則是一層比一層高，對應連續幾疊節節上升。"],["王小玉唱到極高處後，哪一組分鏡能呈現接下來的音勢？",["猛然下降又盤旋，聲音漸細至停，微聲再起後突然向上迸開","先從地底隱約傳來，猛然向上迸開，接著高音再逐層上升","始終在高處盤旋，漸漸匯成眾鳥合鳴，最後只留下弦聲","先逐聲升高，再像煙火向外迸開，之後才急降至幾乎無聲"],0,[10,11],"段落由「陡然一落」開始，飛蛇表現音聲盤旋，接著漸低漸細，最後以地底微聲和煙火寫聲音重起。"],["表演後段寫伴奏與人聲「相和相合」，又比作「好鳥亂鳴」。為什麼可以同時用「相合」和「亂鳴」？",["「相合」指眾人默契拍手，「亂鳴」才是弦聲與人聲互相壓過","「相合」指唱腔只有單一音色，「亂鳴」只是觀眾聽不清楚歌詞","「相合」指樂手重複唱詞，「亂鳴」說明白妞即興改變歌詞","「相合」寫歌聲與弦聲彼此配合，「亂鳴」寫聲音密集交錯、難以分聽"],3,[11],"作者一方面寫合奏的協調，另一方面用眾鳥齊鳴寫聲響多、快而密。兩句各描寫同一段聲音的不同特點。"],["前面寫「人弦俱寂」，緊接著寫叫好聲「轟然雷動」。作者把這兩句放在一起，最能加強什麼效果？",["從一種喧鬧過渡到另一種喧鬧，交代散場時的聲音","讓聲音在極靜與極響間突變，凸顯切聲的俐落和觀眾的激動","從演唱轉為三弦獨奏，讓讀者分清樂手與觀眾的席位","從聽眾的擔憂轉入平穩，說明表演的節奏慢慢放鬆"],1,[11],"歌聲與伴奏同時戛然而止，喝采接著猛然爆發。緊鄰的靜與響增強了收束的力度。"],["湖南少年先說過去不懂「餘音繞梁」，聽完反而覺得「三日」太少。這段插話在全文有什麼作用？",["補述古句的年代，讓讀者能辨別兩句典故出自哪一部書","把讀者的注意從白妞轉到戲園位置，交代少年坐得靠近臺上","從一位聽眾的演出後感受，襯托歌聲留在心裡的時間很長","替即將上演的快板解說典故，說明快板應該唱多久才算好"],2,[12],"少年的經驗從讀書時無法想像，變成聽後連日掛念，讓讀者從旁人體會表演的後勁。"],["形容「黑驢段」時，作者想到「大珠小珠落玉盤」。配合段落其他語句，這個譬喻最能讓讀者想像什麼？",["聲音整齊緩慢地落下，每句間有足夠停頓可以回味","聲音愈來愈低細，最後像藏在盤底不易被聽見","聲音接連落下快速清脆，節奏再快也仍能分辨字音","聲音高低起伏如盤面傾斜，強調劇中人物忽遠忽近"],2,[13],"這段是愈說愈快的快板，但仍「字字清楚」。珠子落盤的形象同時令人聯想到接續速度與清脆感。"],["老殘一方面稱「黑驢段」有獨到之處，一方面又說比前一段遜一籌。哪一項最符合這種評價？",["承認快板的吐字功夫，也保留對前一段整體表現的較高評價","他主要欣賞黑驢故事內容，因此覺得前一段的演唱較平淡","他認為後一段的快速表示技藝退步，所以兩段都不值得稱讚","他看重表演的速度多於唱腔變化，因此認為兩段藝術效果相同"],0,[10,11,13],"原文肯定快板極快仍字字清楚，也明言較前段遜一籌。能同時肯定局部技巧並比較整體效果。"],["結尾說天色還早，又追問是否還有一段，最後請讀者下回再看。這樣收尾最主要有什麼作用？",["交代明湖居必須停止演出，為所有觀眾提前離席找到原因","回頭補寫茶房當初告訴老殘的開唱時間，解開到場時的誤會","讓讀者得知王小玉今天只會說兩段，將整天的表演完整作結","在老殘仍想聽下去時停筆，讓讀者也對下一段表演保有期待"],3,[14],"作者先提出還可能有一段，再用章回小說的說書口吻暫停敘事，把期待帶到下回。"],["老殘看了「說鼓書」的招子，推想它方才貼上。下列哪個細節最能作為這個推想的根據？",["牆上招紙的長寬","黃色招紙還未全乾","居中寫著「說鼓書」","旁邊寫了演出的日期"],1,[2],"紙張還沒乾，才是判斷張貼時間的線索。日期指出演出何時舉行，紙張尺寸與文字位置則是招子的外觀。"],["作者先讓茶房說明梨花大鼓所用的器具，後來又讓老殘打量戲臺。哪一項最能說明兩處文字的關係？",["前段介紹板鼓與三弦，後段交代兩件樂器由誰操奏","前段強調道具繁多，後段寫老殘看見空臺而失望","前段解釋梨花大鼓的由來，後段說明曲目如何選擇","前段提到鼓和梨花簡，後段寫老殘在臺上認出器具"],3,[3,4],"茶房先說用一面鼓、兩片梨花簡。老殘看見板鼓上放著兩個鐵片，才知道那就是梨花簡。兩處以同一件器具前後照應。"],["作者把黑妞的歌聲比作「新鶯出谷，乳燕歸巢」。結合前一句，這兩個意象最能幫助讀者想像什麼？",["歌聲清脆而宛轉，聽來輕靈活潑","歌聲如鳥群自遠而近，在園中迴盪","歌聲低沉又舒緩，聽起來厚實有力","歌聲像兩人輪流接唱，彼此答應"],0,[7],"前一句直接寫「字字清脆，聲聲宛轉」。新鶯、乳燕讓清亮婉轉的歌聲有了可想像的形象。"],["作者說王小玉的相貌「不過中人以上之姿」，接著著力寫她的眼睛和向臺下一望。這樣安排，把讀者的注意力引到哪裡？",["以她的年齡和服裝推斷她學藝的時間","留意她與妹妹的服飾有哪些細微不同","留意她的神采如何使全場觀眾安靜","從眼睛所望的方向判斷她先看見誰"],2,[9],"先略寫相貌，接著細寫眼睛並交代她一望便讓滿園安靜。文字重心在王小玉的神采與掌控全場的能力。"],["「兩片頑鐵，到他手裡，便有了五音十二律似的。」將「頑鐵」與「五音十二律」放在一起，最能突顯什麼？",["鐵片有多種形制，曲調要隨材質而變","器具看似簡單，王小玉卻敲出豐富聲韻","她依照樂理調整音準，讓弦鼓音調一致","表演須備足各類樂器，才能呈現多種聲音"],1,[9],"「頑鐵」寫器具質樸，「五音十二律」形容聲韻彷彿極為豐富，兩者相映，凸顯王小玉的技藝。"],["前半回寫千佛山像「數十里長的屏風」，後半回寫白妞的歌聲像「一線鋼絲拋入天際」。兩段的共同寫法是什麼？",["用誇大的數字寫出事物實際的大小","運用遠近視角交代人物所在的位置","以連續發生的動作表現兩處場景的熱鬧","借具體形象，讓讀者想像景致或聲音的特點"],3,[10],"屏風讓人想像山色連成一幅長景，鋼絲拋向天際則讓人想像歌聲細而陡升。兩段都用具體形象呈現感官經驗。"]];
+const sections = [['街頭招貼與戲園盛況',0,5],['三弦與黑妞登場',5,8],['王小玉登場與聲音變化',8,11],['聽眾回響與黑驢段',11,14]];
+const alphabet = 'ABCD';
+const esc = value => value.replace(/[&<>]/g, key => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[key]));
+const byId = name => document.getElementById(name);
+const form = byId('quiz-form');
+const list = byId('question-list');
+const submit = byId('submit');
+const restart = byId('restart');
+const result = byId('result');
+let graded = false;
+
+byId('passage').innerHTML = sections.map(([title,start,end], index) => {
+  const paragraphs = passage.slice(start,end).map((text, i) =>
+    '<p id="paragraph-'+(start+i+1)+'"><span class="number">第 '+(start+i+1)+' 段</span>'+esc(text)+'</p>').join('');
+  return '<details class="group" '+(index===0?'open':'')+'><summary>'+title+'（第 '+(start+1)+'–'+end+' 段）</summary><div class="source">'+paragraphs+'</div></details>';
+}).join('');
+
+list.innerHTML = questions.map(([question,choices], index) => {
+  const options = choices.map((choice, number) =>
+    '<label class="choice"><input type="radio" name="q'+index+'" value="'+number+'"><span>'+alphabet[number]+'. '+esc(choice)+'</span></label>').join('');
+  return '<fieldset><legend>'+(index+1)+'．'+esc(question)+'</legend><div class="choices">'+options+'</div><div class="feedback" hidden></div></fieldset>';
+}).join('');
+
+const fields = [...list.querySelectorAll('fieldset')];
+function updateProgress() {
+  const count = form.querySelectorAll('input:checked').length;
+  byId('progress').textContent = '已作答 '+count+' / '+questions.length+' 題';
+  submit.disabled = graded || count < questions.length;
+}
+form.addEventListener('change', updateProgress);
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  if (graded || submit.disabled) return;
+  graded = true;
+  let score = 0;
+  questions.forEach(([,options,correct,paragraphs,why], index) => {
+    const inputs = [...fields[index].querySelectorAll('input')];
+    const selected = inputs.findIndex(input => input.checked);
+    if(selected===correct) score++;
+    inputs.forEach(input => input.disabled = true);
+    inputs[correct].closest('label').classList.add('correct');
+    if(selected!==correct) inputs[selected].closest('label').classList.add('incorrect');
+    const links = paragraphs.map(number => '<a href="#paragraph-'+number+'">第 '+number+' 段</a>').join('、');
+    const feedback = fields[index].querySelector('.feedback');
+    feedback.innerHTML = '<p class="key">'+(selected===correct?'答對了。':'你選了 '+alphabet[selected]+'。')+'正解 '+alphabet[correct]+'．'+esc(options[correct])+'</p><p>'+esc(why)+'</p><p>回看原文 '+links+'</p>';
+    feedback.hidden = false;
+  });
+  result.textContent = '本次答對 '+score+' / '+questions.length+' 題。各題下方有解析和原文出處。';
+  result.hidden = false;
+  submit.hidden = true;
+  restart.hidden = false;
+  updateProgress();
+  result.focus();
+  result.scrollIntoView({block:'start'});
+});
+restart.addEventListener('click', () => {
+  form.reset();
+  for (const field of fields) {
+    field.querySelectorAll('input').forEach(input => input.disabled = false);
+    field.querySelectorAll('.choice').forEach(choice => choice.classList.remove('correct','incorrect'));
+    const feedback = field.querySelector('.feedback');
+    feedback.hidden = true;
+    feedback.replaceChildren();
+  }
+  graded = false;
+  submit.hidden = false;
+  restart.hidden = true;
+  result.hidden = true;
+  updateProgress();
+  fields[0].querySelector('input').focus();
+});
+list.addEventListener('click', event => {
+  const link = event.target.closest('a[href^="#paragraph-"]');
+  if(link) document.querySelector(link.hash).closest('details').open = true;
+});
+updateProgress();
+</script>
+</body></html>
