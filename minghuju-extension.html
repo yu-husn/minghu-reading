@@ -12,8 +12,11 @@ h1,h2,p{margin:0}h1{font-size:clamp(2.1rem,6vw,3.4rem);letter-spacing:.05em;line
 .chapter{margin:17px 0;border-block:1px solid #8ba591;padding:11px 0;color:#f0d796}
 .primary{display:inline-block;margin-top:12px;min-height:48px;padding:8px 16px;border:1px solid transparent;border-radius:7px;background:var(--gold);color:#253b2d;font:inherit;text-decoration:none;cursor:pointer}
 .primary:disabled{cursor:default;opacity:.6}:focus-visible{outline:3px solid #c2742c;outline-offset:3px}a{color:var(--jade);text-underline-offset:4px}
-section{margin-top:28px;scroll-margin-top:12px}.group,fieldset{background:var(--paper);border:1px solid var(--line);border-radius:8px}details{margin:9px 0}summary{min-height:48px;padding:.5em .75em;cursor:pointer;color:var(--jade)}
-.source{border-top:1px solid var(--line);padding:12px clamp(12px,3vw,23px);line-height:1.9}.source p+p{margin-top:1em}.source p{scroll-margin-top:16px}.number{font-size:.84em;color:#853b31;margin-right:.5em}
+section{margin-top:28px;scroll-margin-top:12px}.group,fieldset{background:var(--paper);border:1px solid var(--line);border-radius:8px}
+.group{padding:clamp(12px,3vw,23px)}.group h3{color:var(--jade);margin:0 0 12px}.paragraph+.paragraph{margin-top:22px}
+.source{line-height:1.9;scroll-margin-top:16px}.number{font-size:.84em;color:#853b31;margin-right:.5em}
+.paragraph-quiz{border-left:3px solid #789885;margin:14px 0 20px;padding:2px 0 2px clamp(8px,2vw,16px)}
+.paragraph-quiz h4{font-size:1rem;margin:0;color:var(--jade)}.question-sources{font-size:.86rem;margin:0 0 8px;color:var(--jade)}
 fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend{max-width:100%;padding:0 .4em;line-height:1.5}
 .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.choice{display:flex;gap:.6em;align-items:flex-start;min-height:52px;border:1px solid var(--line);border-radius:6px;background:#f3eddd;padding:9px;cursor:pointer}
 .choice input{flex:none;width:1.05em;height:1.05em;margin:.35em 0 0;accent-color:var(--jade)}.choice:has(input:checked){background:#e0ebe0;border-color:var(--jade)}
@@ -32,12 +35,13 @@ fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend
 <p>歡迎各位優秀的閱讀者進入這個隱藏園地，做進階挑戰。</p>
 <a class="primary" href="#reading">進入明湖居</a>
 </header>
-<section id="reading"><h2>後半回原文</h2><div id="passage"></div><a href="#quiz">前往 22 題閱讀挑戰</a></section>
-<section id="quiz">
-<h2>進階閱讀挑戰</h2>
-<p>讀出作者如何鋪陳王小玉登場，又怎麼把聲音寫得彷彿看得見。答完 22 題即可交卷，查看正解、解析與原文出處。</p>
+<section id="reading">
+<h2>分段閱讀與作答</h2>
+<p>讀一段，答一組題目。跨段題可點段號回看前文。全卷 22 題，答完即可交卷看解析。</p>
+<form id="quiz-form">
+<div id="reading-groups"></div>
 <div id="result" role="status" tabindex="-1" hidden></div>
-<form id="quiz-form"><div id="question-list"></div><div class="controls">
+<div class="controls">
 <button class="primary" id="submit" disabled>交卷看解析</button>
 <button class="primary" id="restart" type="button" hidden>重新作答</button>
 <output id="progress" aria-live="polite"></output><a href="#reading">回到原文</a>
@@ -52,25 +56,48 @@ const alphabet = 'ABCD';
 const esc = value => value.replace(/[&<>]/g, key => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[key]));
 const byId = name => document.getElementById(name);
 const form = byId('quiz-form');
-const list = byId('question-list');
+const readingGroups = byId('reading-groups');
 const submit = byId('submit');
 const restart = byId('restart');
 const result = byId('result');
 let graded = false;
 
-byId('passage').innerHTML = sections.map(([title,start,end], index) => {
-  const paragraphs = passage.slice(start,end).map((text, i) =>
-    '<p id="paragraph-'+(start+i+1)+'"><span class="number">第 '+(start+i+1)+' 段</span>'+esc(text)+'</p>').join('');
-  return '<details class="group" '+(index===0?'open':'')+'><summary>'+title+'（第 '+(start+1)+'–'+end+' 段）</summary><div class="source">'+paragraphs+'</div></details>';
-}).join('');
+const questionsByParagraph = passage.map(() => []);
+for (const [index, question] of questions.entries()) {
+  const lastSource = Math.max(...question[3]);
+  questionsByParagraph[lastSource - 1].push(index);
+}
 
-list.innerHTML = questions.map(([question,choices], index) => {
+function paragraphLink(number) {
+  return '<a href="#paragraph-'+number+'">第 '+number+' 段</a>';
+}
+
+let questionNumber = 0;
+function renderQuestion(index) {
+  const [question, choices, , paragraphs] = questions[index];
   const options = choices.map((choice, number) =>
     '<label class="choice"><input type="radio" name="q'+index+'" value="'+number+'"><span>'+alphabet[number]+'. '+esc(choice)+'</span></label>').join('');
-  return '<fieldset><legend>'+(index+1)+'．'+esc(question)+'</legend><div class="choices">'+options+'</div><div class="feedback" hidden></div></fieldset>';
+  const sources = paragraphs.length > 1
+    ? '<p class="question-sources">對照原文 '+paragraphs.map(paragraphLink).join('、')+'</p>'
+    : '';
+  return '<fieldset data-question="'+index+'"><legend>'+(++questionNumber)+'．'+esc(question)+'</legend>'
+    +sources+'<div class="choices">'+options+'</div><div class="feedback" hidden></div></fieldset>';
+}
+
+readingGroups.innerHTML = sections.map(([title,start,end]) => {
+  const paragraphs = passage.slice(start,end).map((text, i) => {
+    const number = start+i+1;
+    const source = '<p id="paragraph-'+number+'" class="source" tabindex="-1"><span class="number">第 '+number+' 段</span>'+esc(text)+'</p>';
+    const indexes = questionsByParagraph[number-1];
+    const quiz = indexes.length
+      ? '<div class="paragraph-quiz"><h4>第 '+number+' 段閱讀題</h4>'+indexes.map(renderQuestion).join('')+'</div>'
+      : '';
+    return '<div class="paragraph">'+source+quiz+'</div>';
+  }).join('');
+  return '<section class="group"><h3>'+esc(title)+'（第 '+(start+1)+'–'+end+' 段）</h3>'+paragraphs+'</section>';
 }).join('');
 
-const fields = [...list.querySelectorAll('fieldset')];
+const fields = [...readingGroups.querySelectorAll('fieldset')];
 function updateProgress() {
   const count = form.querySelectorAll('input:checked').length;
   byId('progress').textContent = '已作答 '+count+' / '+questions.length+' 題';
@@ -82,19 +109,20 @@ form.addEventListener('submit', event => {
   if (graded || submit.disabled) return;
   graded = true;
   let score = 0;
-  questions.forEach(([,options,correct,paragraphs,why], index) => {
-    const inputs = [...fields[index].querySelectorAll('input')];
+  fields.forEach(field => {
+    const [,options,correct,paragraphs,why] = questions[Number(field.dataset.question)];
+    const inputs = [...field.querySelectorAll('input')];
     const selected = inputs.findIndex(input => input.checked);
     if(selected===correct) score++;
     inputs.forEach(input => input.disabled = true);
     inputs[correct].closest('label').classList.add('correct');
     if(selected!==correct) inputs[selected].closest('label').classList.add('incorrect');
-    const links = paragraphs.map(number => '<a href="#paragraph-'+number+'">第 '+number+' 段</a>').join('、');
-    const feedback = fields[index].querySelector('.feedback');
+    const links = paragraphs.map(paragraphLink).join('、');
+    const feedback = field.querySelector('.feedback');
     feedback.innerHTML = '<p class="key">'+(selected===correct?'答對了。':'你選了 '+alphabet[selected]+'。')+'正解 '+alphabet[correct]+'．'+esc(options[correct])+'</p><p>'+esc(why)+'</p><p>回看原文 '+links+'</p>';
     feedback.hidden = false;
   });
-  result.textContent = '本次答對 '+score+' / '+questions.length+' 題。各題下方有解析和原文出處。';
+  result.innerHTML = '<p>本次答對 '+score+' / '+questions.length+' 題。各題下方有解析和原文出處。</p><p><a href="#reading">從第一段查看解析</a></p>';
   result.hidden = false;
   submit.hidden = true;
   restart.hidden = false;
@@ -117,10 +145,6 @@ restart.addEventListener('click', () => {
   result.hidden = true;
   updateProgress();
   fields[0].querySelector('input').focus();
-});
-list.addEventListener('click', event => {
-  const link = event.target.closest('a[href^="#paragraph-"]');
-  if(link) document.querySelector(link.hash).closest('details').open = true;
 });
 updateProgress();
 </script>
