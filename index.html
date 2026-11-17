@@ -159,7 +159,7 @@ mark{background:linear-gradient(transparent 55%,#f4c96a 55%);color:inherit;font-
 .route-segments .sight-line{stroke:#2f5975;stroke-width:4;stroke-dasharray:7 5}
 .route-clue{display:block;width:100%;min-height:44px;padding:5px 9px;text-align:left;font:inherit;color:inherit;background:#fffaf0;border:1px solid #b9a77f;border-radius:6px;cursor:pointer}
 .route-clue[aria-pressed="true"]{background:#f7dfae;border-color:#9e3d26}
-.retry-action{grid-column:1 / -1}.answer-details{font-size:.9em;margin-top:6px}.answer-details p{margin:4px 0}
+.retry-action{grid-column:1 / -1}.answer-details{font-size:.9em;margin-top:6px}.answer-details p{margin:4px 0}.answer-details .answer-source{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:.65em}.answer-source strong{white-space:nowrap}.answer-source span{overflow-wrap:anywhere}
 .rmsg{font-size:18px;margin:8px 0}.rmsg.is-error{color:#9f2926;font-weight:700}.rlist{display:flex;flex-direction:column;gap:6px}
 #textbox{position:fixed;inset:0;z-index:30;background:rgba(30,36,34,.6);display:flex;align-items:center;justify-content:center}
 .tbw{background:var(--paper);border:2px solid var(--line);border-radius:10px;width:min(680px,calc(100% - 28px));max-height:84vh;overflow:auto;padding:14px 20px;box-sizing:border-box;position:relative}
@@ -1806,7 +1806,7 @@ function answerDetails(question){
   const source=paragraphLabel(question.hl,question.source)||readingLabel(question.source);
   return '<div class="answer-details"><p><strong>正解</strong>　'+esc(question.o[0])+'</p>'
     +(evidence?'<p><strong>原文證據</strong>　「'+esc(evidence)+'」</p>':'')
-    +'<p><strong>出處</strong>　'+esc(source)+'「'+esc(question.hl)+'」</p>'
+    +'<p class="answer-source"><strong>出處</strong><span>'+esc(source)+'「'+esc(question.hl)+'」</span></p>'
     +(question.why?'<p><strong>解析</strong>　'+esc(question.why)+'</p>':'')+'</div>';
 }
 
