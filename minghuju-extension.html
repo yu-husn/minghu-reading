@@ -256,18 +256,13 @@ function renderQuestion(index) {
 
 const singingQuote = '啟朱脣，發皓齒，唱了幾句書兒。';
 const listenersQuote = '五臟六腑裡，像熨斗熨過，無一處不伏貼。\n三萬六千個毛孔，像吃了人參果，無一個毛孔不暢快。';
-const listenersImage = 'img/minghuju-entranced.jpg';
 const applauseImage = 'img/minghuju-applause.jpg';
 const applauseQuote = '這時臺下叫好之聲，轟然雷動。';
 
-function renderCaption(quote, number, {live = false, long = false} = {}) {
-  return '<figcaption><span class="quote-text'+(long?' long-quote':'')+'"'+(live?' aria-live="polite"':'')+'>'
+function renderCaption(quote, number) {
+  return '<figcaption><span class="quote-text">'
     +esc(quote)+'</span><span class="quote-source">課文第 '+number+' 段</span></figcaption>';
 }
-
-const listenerIllustration = '<figure class="illustration"><img class="section-art" width="1536" height="1024" src="'+listenersImage
-  +'" alt="老殘和臺下的聽眾聽得入神，眉眼舒展" loading="lazy" decoding="async">'
-  +renderCaption(listenersQuote,10,{long:true})+'</figure>';
 
 const applauseIllustration = '<figure class="illustration"><div class="metaphor-art" data-motion="applause"><img class="section-art" width="1536" height="1024" src="'+applauseImage
   +'" alt="表演結束，滿場聽眾抬頭叫好，有人拍掌喝采" loading="lazy" decoding="async"></div>'
@@ -530,7 +525,6 @@ function renderPassage(number, text) {
     }
     while (/[）」』]/.test(text.charAt(end)) && end < text.length) end++;
     reading += copy(text.slice(cursor,end));
-    if (number===10 && groupIndex===0) reading += listenerIllustration;
     if (number===11 && cards[0][0]==='thunder') reading += applauseIllustration;
     reading += renderMetaphorGallery(number,cards,groupIndex);
     cursor = end;
