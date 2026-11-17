@@ -182,6 +182,87 @@ var EVIDENCE={
  he:{"station":"荷花叢","q":"「嗤嗤價響」除了模仿聲音，也讓人感覺船在怎樣的地方行進？","o":["船貼著初枯的荷葉，在窄窄的荷叢穿過","船在開闊的湖面快速滑行，遠離荷叢","船已停在岸邊，荷葉被岸上的人搖動"],"evidence":["兩邊荷葉荷花將船夾住。那荷葉初枯，擦得船嗤嗤價響","那水鳥被人驚起，格格價飛","老殘隨手摘了幾個蓮蓬"],"hl":"兩邊荷葉荷花將船夾住。那荷葉初枯，擦得船嗤嗤價響","why":"「夾住」寫出航道狹窄，「擦得船」交代聲音由荷葉貼著船身所發出。"},
  finQ:{"station":"返回鵲華橋","q":"結尾怎麼寫出老殘悠閒地結束這趟遊湖？","o":["吃著隨手摘的蓮蓬，不知不覺已回到橋邊","專心划船趕路，到了橋邊才停下吃蓮蓬","回到橋邊後重新雇船，再往歷下亭前進"],"hl":"老殘隨手摘了幾個蓮蓬，一面吃著，一面船已到了鵲華橋畔了","why":"「隨手」和兩個「一面」把吃蓮子與回程寫在一起，讀來有順勢收尾的從容。"}
 };
+// Claude 原版各題庫的題目數量。前段為逐題核對過的原版題，新增題一律附在後段。
+var ORIGINAL_COUNTS={"pro":9,"que":4,"lixia":6,"tieA":6,"tieM":8,"song":4,"tieW":5,"tieR":5,"shui":6,"he":6,"gate":3,"gateQF":1,"hall":1,"east":1,"corr":3,"shuiB":1,"finQ":2,"fin":6};
+var ORIGINAL_EVIDENCE={
+  "que": [
+    1,
+    "鵲華橋",
+    "哪一句交代老殘怎麼到鵲華橋？",
+    [
+      "午後便步行至鵲華橋邊",
+      "復行下船，向西盪去",
+      "船已到了鵲華橋畔了"
+    ]
+  ],
+  "tieM": [
+    4,
+    "望千佛山",
+    "哪一句同時交代老殘站的位置和望的方向？",
+    [
+      "到了鐵公祠前，朝南一望",
+      "朝北不遠，便到歷下亭前",
+      "復行下船，向西盪去"
+    ]
+  ],
+  "song": [
+    2,
+    "明湖倒影",
+    "哪一句同時寫了老殘聽見什麼、接著怎麼看？",
+    [
+      "忽聽一聲漁唱，低頭看去",
+      "到了鐵公祠前，朝南一望",
+      "那水鳥被人驚起，格格價飛"
+    ]
+  ],
+  "tieR": [
+    0,
+    "南岸蘆花",
+    "哪一句直接交代湖裡的那座山從哪裡來？",
+    [
+      "那千佛山的倒影映在湖裡，顯得明明白白",
+      "一片白花映著帶水氣的斜陽",
+      "上去便是街市"
+    ]
+  ],
+  "gateQF": [
+    0,
+    "鐵公祠大門",
+    "哪一句能證明老殘剛才望到的是這座山？",
+    [
+      "到了鐵公祠前，朝南一望，只見對面千佛山上，梵宇僧樓",
+      "朝北不遠，便到歷下亭前",
+      "進了大門，正面便是鐵公享堂"
+    ]
+  ],
+  "he": [
+    5,
+    "荷花叢",
+    "哪一句原文最能支持你對荷花叢的判斷？",
+    [
+      "兩邊荷葉荷花將船夾住",
+      "那水鳥被人驚起，格格價飛",
+      "老殘隨手摘了幾個蓮蓬"
+    ]
+  ]
+};
+Object.entries(ORIGINAL_EVIDENCE).forEach(function([pool, [index, station, evidencePrompt, evidence]]) {
+  Object.assign(Q[pool][index], {station, evidencePrompt, evidence});
+});
+
+function drawQuiz(pool, count, shuffle) {
+  var bank=Q[pool]||[];
+  var originalCount=ORIGINAL_COUNTS[pool]||0;
+  var original=bank.slice(0,originalCount);
+  var pair=ORIGINAL_EVIDENCE[pool];
+  var featured=pair && original[pair[0]];
+  var result=featured && count>0 ? [featured] : [];
+  var remaining=count-result.length;
+  if(remaining>0) result.push(...shuffle(original.filter(function(q){ return q!==featured; })).slice(0,remaining));
+  if(result.length<count) result.push(...shuffle(bank.slice(originalCount)).slice(0,count-result.length));
+  return result;
+}
+
 // 幫每一題編號：題庫序號 p、題內序號 i。savedIndex 保留刪題前的存檔題號。
 var BYID={};
 function tag(q,p,i){ q._p=p; q._i=i; q._id=POOLS[p]+'.'+i; BYID[q._id]=q; }
@@ -192,8 +273,7 @@ Object.values(EVIDENCE).forEach(function(q,i){ tag(q,POOLS.indexOf('evidence'),i
 // 每個題庫每次遊戲抽幾題（老師頁用來估計「被抽到的人數」）
 var DRAW={pro:2,que:1,lixia:2,tieA:2,tieM:2,song:1,tieW:1,tieR:1,shui:2,he:2,gate:1,gateQF:1,hall:1,east:1,corr:1,shuiB:1,finQ:2,fin:3,word:4,task:7};
 // 成績碼：MH1-xxxxx（只含班級、座號、對錯，沒有姓名）
-Object.keys(EVIDENCE).forEach(function(pool){ DRAW[pool]--; });
-DRAW.evidence=Object.keys(EVIDENCE).length;
+DRAW.evidence=0;
 var AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function encode(o){ var bits=''; function w(v,n){ v=Math.max(0,Math.min((1<<n)-1,v|0)); bits+=v.toString(2).padStart(n,'0'); }
   w(o.cls,10); w(o.seat,7); w(o.total,7); w(o.right,7); w(o.ch?1:0,1); w(o.wrong.length,6);
@@ -207,6 +287,6 @@ function decode(code){ var m=/MH1-([A-Z2-9]+)/.exec(String(code).toUpperCase());
   var pos=0; function r(n){ var v=parseInt(bits.substr(pos,n),2); pos+=n; return v; }
   var o={cls:r(10),seat:r(7),total:r(7),right:r(7),ch:!!r(1),wrong:[]}; var n=r(6);
   for(var k=0;k<n;k++){ var p=r(5), i=r(4); o.wrong.push(POOLS[p]+'.'+i); } o.code='MH1-'+s; return o; }
-window.MH={PASSAGE:PASSAGE,OPENING:OPENING,NOTES:NOTES,Q:Q,EVIDENCE:EVIDENCE,POOLS:POOLS,WORDQ:WORDQ,WORDK:WORDK,TASKN:TASKN,TASKQ:TASKQ,BYID:BYID,DRAW:DRAW,encode:encode,decode:decode,
+window.MH={PASSAGE:PASSAGE,OPENING:OPENING,NOTES:NOTES,Q:Q,EVIDENCE:EVIDENCE,POOLS:POOLS,WORDQ:WORDQ,WORDK:WORDK,TASKN:TASKN,TASKQ:TASKQ,BYID:BYID,DRAW:DRAW,drawQuiz:drawQuiz,encode:encode,decode:decode,
   FORM_URL:''};   // ← 老師的 Google 表單網址（填了以後，遊戲結尾會出現「開啟表單」按鈕）
 })();

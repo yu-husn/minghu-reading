@@ -312,7 +312,7 @@ body.vnfull #compass{display:none}
   </fieldset>
   <div class="start-guide">
   <p><strong>計分方式</strong>：共有 38 題，每題 2.5 分，合計 95 分。抓蓮蓬小遊戲最多可得 5 分，總分 100 分。</p>
-  <p><strong>出題方向：</strong>每輪有 6 題要先選答案，再找支持答案的課文文句。其餘 32 題完成作答即可。每題首次答對得 2.5 分，兩步題須兩步都首次答對。第一次答錯會出現提示，每題可重答一次，結束後可查看正解和解析。</p>
+  <p><strong>出題方向：</strong>各站優先從原版題庫隨機抽題。每輪有 6 題要先選答案，再找支持答案的課文文句。其餘 32 題完成作答即可。每題首次答對得 2.5 分，兩步題須兩步都首次答對。第一次答錯會出現提示，每題可重答一次，結束後可查看正解和解析。</p>
   <p><strong>你的任務</strong>：扮演遊戲中的小藥童。每收集一段湖景，就揭開<strong>《明湖長卷》</strong>的一格。集滿<strong>八段湖景</strong>後，回到鵲華橋展開整幅長卷。</p>
   <p><strong>角色說明</strong>：小藥童是為各位同學設計的角色，課文中並未出現。作答時請以課文原文為依據。</p>
   <p><strong>每到一站</strong>：先看眼前的景色，再從課文找一句線索，回答老殘的問題。遊玩中可在上方切換作答模式。</p>
@@ -324,7 +324,7 @@ body.vnfull #compass{display:none}
 
 <script src="vendor/three.min.js"></script>
 <script src="vendor/Reflector.js"></script>
-<script src="qbank.js"></script>
+<script src="qbank.js?v=original-first"></script>
 <script>
 (function(){
 const T = THREE;
@@ -918,7 +918,6 @@ function pixels(key){ const im=IMG[key], W=im.naturalWidth||1600, H=im.naturalHe
 function hsl(r,g,b){ const mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/510, d=mx-mn; if(!d) return [0,0,l]; const s=d/(l>.5?510-mx-mn:mx+mn); let hh; if(mx===r) hh=((g-b)/d+6)%6; else if(mx===g) hh=(b-r)/d+2; else hh=(r-g)/d+4; return [hh*60,s,l]; }
 
 // ---------- 題庫（每站隨機抽題，選項順序也打亂；o[0] 是正解） ----------
-const Q=MH.Q;
 
 // ---------- 劇情 ----------
 // {bg} 換場景、{w,t,hl} 對話（hl＝課文中的原句）、{quiz,n} 抽題、{task} 互動小任務、{goal} 下一個目標、{act} 動作
@@ -1702,9 +1701,7 @@ function next(){ if(busy) return;
   if(s.cap!==undefined && !s.bg) setCap(s.cap);
   if(s.bg){ setBg(s.bg,s); return next(); }
   if(s.quiz){
-    const featured=MH.EVIDENCE[s.quiz];
-    const picks=shuffle(Q[s.quiz]).slice(0,s.n-(featured?1:0));
-    if(featured) picks.unshift(featured);
+    const picks=MH.drawQuiz(s.quiz,s.n,shuffle);
     queue.unshift(...picks.map(q=>({q})));
     return next();
   }
