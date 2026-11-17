@@ -52,9 +52,6 @@ section{margin-top:28px;scroll-margin-top:12px}.group,fieldset{background:var(--
 @keyframes snake-through-mist{0%{stroke-dashoffset:12;opacity:0}16%,83%{opacity:1}100%{stroke-dashoffset:-100;opacity:0}}
 @media(prefers-reduced-motion:reduce){.entrance-serpent path{animation:none;stroke-dasharray:none;opacity:.65}}
 .entrance-metaphor{position:absolute;z-index:2;inset:clamp(8px,2vw,18px) auto auto clamp(8px,2vw,18px);max-width:calc(100% - 16px);padding:.3em .6em;border:1px solid #f1d29c;border-radius:5px;background:#23382ff5;color:#fff6df;line-height:1.45;font-size:clamp(12px,2.3vw,17px);font-weight:700}
-.entrance-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-5px 0 18px}
-.entrance-controls .primary{margin:0}
-.entrance-status{font-size:.85rem}
 @media(prefers-reduced-motion:reduce){.entrance-frame{transition:none}.entrance-frame[data-frame].is-visible,.entrance-streak.is-visible{animation:none}}
 .illustration figcaption{position:absolute;z-index:2;inset:auto 0 0;padding:clamp(10px,3vw,28px);background:linear-gradient(0deg,#17201df5,#17201ddd 72%,#17201d00);color:#fff6df;text-align:center;text-shadow:0 1px 3px #18201e}
 .illustration .quote-text{display:block;font-family:"Noto Serif TC","PMingLiU",serif;font-size:clamp(17px,3.2vw,28px);letter-spacing:.035em}
@@ -88,7 +85,6 @@ fieldset{min-width:0;margin:15px 0;padding:10px clamp(10px,3vw,20px) 15px}legend
 .metaphor-card img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;background:#dbcbb1}
 .metaphor-art{position:relative}
 .metaphor-art canvas{position:absolute;inset:0;width:100%;height:100%}
-.metaphor-play{display:inline-block;min-height:44px;margin-top:4px;padding:5px 12px;border:1px solid #748879;border-radius:5px;background:#edf2e6;color:#234c40;font:inherit;font-size:.85em;cursor:pointer}
 .metaphor-card figcaption{padding:10px 12px 13px;line-height:1.6}
 .metaphor-card blockquote{margin:.36em 0 .45em;padding-left:.65em;border-left:3px solid #ae8a51;color:#4b4133;font-family:"Noto Serif TC","PMingLiU",serif}
 .metaphor-title{display:block;color:#265b4c}
@@ -207,6 +203,29 @@ const esc = value => value.replace(/[&<>]/g, key => ({'&':'&amp;','<':'&lt;','>'
 const byId = name => document.getElementById(name);
 const form = byId('quiz-form');
 const readingGroups = byId('reading-groups');
+function playWhenVisible(elements, start) {
+  const visible = new Map();
+  const observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting || entry.intersectionRatio < .05) {
+        visible.get(entry.target)?.();
+        visible.delete(entry.target);
+      } else if (!document.hidden && entry.intersectionRatio >= .32 && !visible.has(entry.target)) {
+        visible.set(entry.target,start(entry.target));
+      }
+    }
+  },{threshold:[0,.05,.32]});
+  elements.forEach(element=>observer.observe(element));
+  document.addEventListener('visibilitychange',()=>{
+    if (document.hidden) {
+      visible.forEach(stop=>stop?.());
+      visible.clear();
+      observer.disconnect();
+    } else {
+      elements.forEach(element=>observer.observe(element));
+    }
+  });
+}
 const submit = byId('submit');
 const restart = byId('restart');
 const result = byId('result');
@@ -250,9 +269,9 @@ const listenerIllustration = '<figure class="illustration"><img class="section-a
   +'" alt="老殘和臺下的聽眾聽得入神，眉眼舒展" loading="lazy" decoding="async">'
   +renderCaption(listenersQuote,10,{long:true})+'</figure>';
 
-const applauseIllustration = '<div class="motion-scene"><figure class="illustration"><div class="metaphor-art"><img class="section-art" width="1536" height="1024" src="'+applauseImage
+const applauseIllustration = '<figure class="illustration"><div class="metaphor-art" data-motion="applause"><img class="section-art" width="1536" height="1024" src="'+applauseImage
   +'" alt="表演結束，滿場聽眾抬頭叫好，有人拍掌喝采" loading="lazy" decoding="async"></div>'
-  +renderCaption(applauseQuote,11)+'</figure><button class="metaphor-play" type="button" data-motion="applause" data-sound="與喝采聲" data-title="滿場喝采">播放動畫與喝采聲</button></div>';
+  +renderCaption(applauseQuote,11)+'</figure>';
 
 
 const metaphorScenes = {
@@ -468,20 +487,19 @@ const metaphorGrouping = {
   10:[2,1,1], 11:[1,1,1,1,1], 12:[1,1], 13:[1]
 };
 
+const animatedMetaphors = new Set(['prodigy','blending-tunes','many-strings','oriole','swallow','silver-wire','thunder','jade-plate','mountain-serpent','underground-tone','fireworks']);
 function renderMetaphorGallery(number, cards, groupIndex) {
   const grouped = cards.length > 1;
   const title = grouped ? cards.map(card => card[1]).join('、') : cards[0][1];
-  return '<details class="metaphor-gallery" id="metaphors-'+number+'-'+(groupIndex+1)+'">'
+  return '<details class="metaphor-gallery" id="metaphors-'+number+'-'+(groupIndex+1)+'"'
+    +(cards.some(([id])=>animatedMetaphors.has(id))?' open':'')+'>'
     +'<summary>看意象圖｜'+esc(title)+(grouped?'（'+cards.length+' 張）':'')+'</summary>'
     +'<div class="metaphor-grid">'+cards.map(([id,name,quote,description,alt,kind,reuse]) => {
-      const animated = ['prodigy','blending-tunes','many-strings','oriole','swallow','thunder','jade-plate','mountain-serpent','underground-tone','fireworks'].includes(id);
-      const sound = {thunder:'與雷聲','jade-plate':'與落珠聲','underground-tone':'與聲音',fireworks:'與煙火聲'}[id]||'';
-      const playLabel = '播放動畫'+sound;
-      return '<figure class="metaphor-card"><div class="metaphor-art"><img width="768" height="512" loading="lazy" decoding="async" src="img/minghuju-'
+      const motion = animatedMetaphors.has(id)?' data-motion="'+id+'"':'';
+      return '<figure class="metaphor-card"><div class="metaphor-art"'+motion+'><img width="768" height="512" loading="lazy" decoding="async" src="img/minghuju-'
       +(reuse ? '' : 'metaphor-')+id+'.jpg" alt="'+esc(alt)+'"><span class="metaphor-label">'+esc(kind||'譬喻想像')
       +'</span></div><figcaption><strong class="metaphor-title">'+esc(name)+'</strong><blockquote>'+esc(quote)
       +'</blockquote><p class="metaphor-description" hidden>'+esc(description)+'</p>'
-      +(animated?'<button class="metaphor-play" type="button" data-motion="'+id+'" data-sound="'+sound+'" aria-label="'+playLabel+'：'+esc(name)+'">'+playLabel+'</button>':'')
       +'</figcaption></figure>';
     }
     ).join('')+'</div></details>';
@@ -536,37 +554,27 @@ readingGroups.innerHTML = sections.map(([title,start,end,art,description,quotePa
   const entrance = art === 'bainiu';
   const image = '<img class="section-art" width="1536" height="1024" src="img/minghuju-'+(entrance?'bainiu-glance':art)+'.jpg" alt="'+esc(description)+'"'+loading+' decoding="async">';
   const frames = entrance ? '<div class="entrance-frames">'+image+'<span class="entrance-streak" aria-hidden="true"></span><svg class="entrance-serpent" viewBox="0 0 600 400" aria-hidden="true"><path pathLength="100" d="M45 290 C80 244 142 280 170 245 S120 204 178 186 S271 228 310 192 S262 144 323 130 S430 155 475 113 S492 66 555 69" fill="none" stroke="#fff2c1" stroke-width="2.8" stroke-linecap="round"/></svg><p class="entrance-metaphor" hidden></p></div>' : image;
-  const illustration = '<figure class="illustration '+art+'-art">'+frames+renderCaption(quote,quoteParagraph,{live:entrance})+'</figure>';
-  const zoomTitle = {arrival:'街頭招貼',inn:'高陞店問書',hall:'走進明湖居',strings:'三弦開場',heiniu:'黑妞試唱',entranced:'凝神聽書'}[art];
-  const controls = entrance
-    ? '<div class="entrance-controls"><button id="play-entrance" class="primary" type="button">播放白妞出場與唱書動畫</button><span id="entrance-status" class="entrance-status" role="status"></span></div>'
-    : zoomTitle ? '<div class="entrance-controls"><button class="primary" data-zoom="'+art+'" data-title="'+zoomTitle+'" type="button">播放'+zoomTitle+'動畫</button></div>' : '';
+  const illustration = '<figure class="illustration '+art+'-art" data-scene="'+art+'">'+frames+renderCaption(quote,quoteParagraph)+'</figure>';
   const heading = '<div class="station-heading"><p>第 '+(index+1)+' 站／共 '+sections.length+' 站</p><h3 id="station-title-'+index+'" tabindex="-1">'+esc(title)+'</h3></div>';
   const mission = '<p class="station-task"><strong>本站任務</strong>'+esc(task)+'</p>';
-  return '<section class="group station" aria-labelledby="station-title-'+index+'"'+(index===0?'':' hidden')+'>'+heading+illustration+controls+mission+paragraphs+'</section>';
+  return '<section class="group station" aria-labelledby="station-title-'+index+'"'+(index===0?'':' hidden')+'>'+heading+illustration+mission+paragraphs+'</section>';
 }).join('');
 
-const entranceButton = byId('play-entrance');
-const entranceStatus = byId('entrance-status');
 const entranceFrames = document.querySelector('.entrance-frames');
 const entranceMetaphorLabel = entranceFrames.querySelector('.entrance-metaphor');
 const entranceStreak = entranceFrames.querySelector('.entrance-streak');
 const entranceCaption = entranceFrames.nextElementSibling.querySelector('.quote-text');
 const entranceSource = entranceCaption.nextElementSibling;
 const lastEntranceCaption = entranceCaption.textContent;
-let sceneZoom;
-readingGroups.addEventListener('click',event => {
-  const button = event.target.closest('[data-zoom]');
-  if (!button) return;
-  sceneZoom?.cancel();
-  const image = button.closest('.station').querySelector('.illustration .section-art');
-  const target = {arrival:'translateX(-3%) scale(1.46)',inn:'scale(1.35)',hall:'scale(1.62)',strings:'scale(1.34)',heiniu:'scale(1.55)',entranced:'scale(1.48)'}[button.dataset.zoom];
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  sceneZoom = image.animate(
-    [{transform:'none'},{transform:target}],
-    {duration:reduced?0:4200,easing:'ease-in-out',fill:'forwards'}
+const zoomTargets = {arrival:'translateX(-3%) scale(1.46)',inn:'scale(1.35)',hall:'scale(1.62)',strings:'scale(1.34)',heiniu:'scale(1.55)',entranced:'scale(1.48)'};
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+playWhenVisible([...document.querySelectorAll('[data-scene]')].filter(scene=>zoomTargets[scene.dataset.scene]),scene=>{
+  if (reducedMotion.matches) return;
+  const zoom = scene.querySelector('.section-art').animate(
+    [{transform:'none'},{transform:zoomTargets[scene.dataset.scene]}],
+    {duration:4200,easing:'ease-in-out',fill:'forwards'}
   );
-  button.textContent = '重播'+button.dataset.title+'動畫';
+  return ()=>zoom.cancel();
 });
 const entranceMetaphors = {
   wire: '譬喻想像｜鋼絲拋入天際：歌聲突然拔高',
@@ -623,6 +631,7 @@ let entrancesPlaying = false;
 let entranceTimers = [];
 let entranceFrameImages;
 let currentEntranceFrame;
+let entranceFrameLoad;
 
 
 async function loadEntranceFrames() {
@@ -672,42 +681,33 @@ function stopEntrance(completed = false) {
   entranceTimers = [];
   entrancesPlaying = false;
   window.dispatchEvent(new Event('minghu-entrance-stop'));
-  if (!completed) showEntranceFrame('glance', lastEntranceCaption);
-  entranceButton.textContent = '重播白妞出場與唱書動畫';
+  if (!completed && entranceFrameImages) showEntranceFrame('glance', lastEntranceCaption);
 }
 
-entranceButton.addEventListener('click', async () => {
-  if (entrancesPlaying) {
+playWhenVisible([entranceFrames],()=>{
+  if (reducedMotion.matches) return;
+  let visible = true;
+  entranceFrameLoad ??= loadEntranceFrames().catch(()=>{
+    entranceFrameLoad = undefined;
+    return null;
+  });
+  entranceFrameLoad.then(images=>{
+    if (!visible || !images || entranceFrames.closest('.station').hidden) return;
+    entranceFrameImages = images;
+    entrancesPlaying = true;
+    const [,firstFrame,firstCaption] = entranceCues[0];
+    showEntranceFrame(firstFrame,firstCaption);
+    entranceTimers = entranceCues.slice(1).map(([delay,frame,caption,paragraph]) =>
+      setTimeout(()=>{
+        showEntranceFrame(frame,caption,paragraph);
+        if (frame==='applause') window.dispatchEvent(new Event('minghu-entrance-applause'));
+      },delay));
+    entranceTimers.push(setTimeout(()=>stopEntrance(true),entranceDuration));
+  });
+  return ()=>{
+    visible = false;
     stopEntrance();
-    return;
-  }
-  window.dispatchEvent(new Event('minghu-entrance-prepare'));
-  entranceButton.disabled = true;
-  entranceStatus.textContent = '載入動畫中';
-  try {
-    entranceFrameImages ??= await loadEntranceFrames();
-  } catch {
-    entranceStatus.textContent = '動畫載入失敗，請再試一次。';
-    return;
-  } finally {
-    entranceButton.disabled = false;
-  }
-
-  if (entranceFrames.closest('.station').hidden) {
-    entranceStatus.textContent = '';
-    return;
-  }
-  entrancesPlaying = true;
-  entranceStatus.textContent = '';
-  entranceButton.textContent = '停止動畫';
-  const [, firstFrame, firstCaption] = entranceCues[0];
-  showEntranceFrame(firstFrame, firstCaption);
-  entranceTimers = entranceCues.slice(1).map(([delay, frame, caption, paragraph]) =>
-    setTimeout(() => {
-      showEntranceFrame(frame, caption, paragraph);
-      if (frame==='applause') window.dispatchEvent(new Event('minghu-entrance-applause'));
-    }, delay));
-  entranceTimers.push(setTimeout(() => stopEntrance(true), entranceDuration));
+  };
 });
 
 
@@ -791,7 +791,6 @@ function showStation(index, {focus = true, scroll = true} = {}) {
   if (!stations[index]) return;
   clearReadingReturn();
   if (index!==activeStation && entrancesPlaying) stopEntrance();
-  if (index!==activeStation) sceneZoom?.cancel();
   activeStation = index;
   stations.forEach((station,i) => { station.hidden = i!==index; });
   if (graded) result.hidden = true;
