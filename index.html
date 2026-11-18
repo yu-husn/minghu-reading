@@ -892,7 +892,7 @@ const laoPos = new T.Vector3(-33,0.3,-31);
 const BOUND={x:95,zMin:-62,zMax:78};
 function tryMove(nx,nz){ if(mode==='inner'){ let ok=false; if(!innerBlocked(nx,P.z)){ P.x=nx; ok=true; } if(!innerBlocked(P.x,nz)){ P.z=nz; ok=true; } return ok; }
   P.x=Math.max(-BOUND.x,Math.min(BOUND.x,nx)); P.z=Math.max(BOUND.zMin,Math.min(BOUND.zMax,nz)); return true; }
-function setTarget(x,z){ x=Math.max(-BOUND.x,Math.min(BOUND.x,x)); z=Math.max(BOUND.zMin,Math.min(BOUND.zMax,z)); target=new T.Vector3(x,0.3,z); }
+function setTarget(x,z){ endWalkingGuide(); x=Math.max(-BOUND.x,Math.min(BOUND.x,x)); z=Math.max(BOUND.zMin,Math.min(BOUND.zMax,z)); target=new T.Vector3(x,0.3,z); }
 
 // ---------- 課文（原文，已無版權） ----------
 const PASSAGE=MH.PASSAGE;
@@ -2394,10 +2394,10 @@ const innerLabels=INNER.map(w=>{ const el=document.createElement('div'); el.clas
 function enterInner(){ trail.length=0; mode='inner'; inner.add(kid,lao,beacon,arrow); boat.visible=false;
   P.set(6,0.3,-16); laoPos.set(8.5,0.3,-17); heading=0; target=null; innerStep=0; step=order.indexOf('inner');
   stations.forEach(s=>s.el.style.display='none'); goalNow=INNER[0].goal; first=true; updHint(); toast('走進鐵公祠：用方向鍵或點地面走路'); }
-function exitInner(){ trail.length=0; mode='lake'; scene.add(kid,lao,beacon,arrow); innerLabels.forEach(e=>e.style.display='none');
+function exitInner(){ endWalkingGuide(); trail.length=0; mode='lake'; scene.add(kid,lao,beacon,arrow); innerLabels.forEach(e=>e.style.display='none');
   P.set(42,0.3,16); laoPos.set(44,0.3,15); heading=Math.PI; target=null; step=order.indexOf('he'); goalNow=GOALS.he; first=true; updHint(); }
 function checkInner(){ if(talking) return; const w=INNER[innerStep]; if(!w) return;
-  if(Math.hypot(P.x-w.x,P.z-w.z)<w.r){ innerStep++; const nxt=INNER[innerStep];
+  if(Math.hypot(P.x-w.x,P.z-w.z)<w.r){ endWalkingGuide(); innerStep++; const nxt=INNER[innerStep];
     if(w.final){ play(SCENES.shui,()=>{ updHint(); saveGame(); }); goalNow=null; }
     else play(w.steps.concat(nxt?[{igoal:nxt.goal}]:[]),()=>{ updHint(); saveGame(); },true);
     updHint(); } }
@@ -2447,30 +2447,31 @@ function loop(){ const raw=clock.getDelta(), dt=Math.min(raw,0.05), t=clock.elap
   if(journeyMap.open||!document.getElementById('intro').hidden){ requestAnimationFrame(loop); return; }
   updLost(dt);
   // 移動
-  let moving=false;
+  let moving=false, leaderWalking=false;
   const kx=(keys.l?1:0)-(keys.r?1:0), kz=(keys.u?1:0)-(keys.d?1:0);
-  if((kx||kz) && !talking && mode!=='turn'){ target=null; const len=Math.hypot(kx,kz); tmp.set(kx/len,0,kz/len);
+  if((kx||kz) && !talking && mode!=='turn'){ endWalkingGuide(); target=null; const len=Math.hypot(kx,kz); tmp.set(kx/len,0,kz/len);
     const sp=(mode==='lake'&&isWater(P.x,P.z)?9:7)*dt; moving=true;
     tryMove(P.x+tmp.x*sp, P.z+tmp.z*sp);
     const want=Math.atan2(tmp.x,tmp.z); let da=want-heading; while(da>Math.PI)da-=Math.PI*2; while(da<-Math.PI)da+=Math.PI*2; heading+=da*Math.min(1,dt*10); }
+  else if(walkingGuide && !talking){ ({moving,leaderWalking}=walkWithLao(dt)); }
   else if(target && !talking && mode!=='turn'){ tmp.subVectors(target,P); tmp.y=0; const d=tmp.length();
     if(d<0.3) target=null; else { moving=true; const sp=(isWater(P.x,P.z)?9:7)*dt; tmp.normalize();
       const nx=P.x+tmp.x*Math.min(sp,d), nz=P.z+tmp.z*Math.min(sp,d); if(!tryMove(nx,nz)) target=null;
       const want=Math.atan2(tmp.x,tmp.z); let da=want-heading; while(da>Math.PI)da-=Math.PI*2; while(da<-Math.PI)da+=Math.PI*2; heading+=da*Math.min(1,dt*8); } }
   inBoat=mode!=='inner'&&isWater(P.x,P.z);
-  walkPhase+= moving? dt*10 : 0;
+  walkPhase+= moving||leaderWalking? dt*10 : 0;
   // 小藥童
   const boatRise=.05+Math.sin(t*2)*.06;
   kid.position.set(P.x, inBoat?.2+boatRise:(mode==='inner'?innerY(P.x,P.z):.3), P.z); kid.rotation.y=heading;
   const sw=moving&&!inBoat?Math.sin(walkPhase)*0.35:0; kid.userData.legL.rotation.x=sw; kid.userData.legR.rotation.x=-sw;
-  // 老殘走路時跟在後面，搭船時位於小藥童和船夫之間。
+  // 帶路時由 walkWithLao 控制；平時跟在後面，搭船時位於小藥童和船夫之間。
   if(inBoat){ laoPos.set(P.x-Math.sin(heading)*2.2,.2+boatRise,P.z-Math.cos(heading)*2.2); lao.rotation.y=heading; }
-  else { const lt=trail[trail.length-1]; if(!lt||Math.hypot(P.x-lt[0],P.z-lt[1])>0.35){ trail.push([P.x,P.z]); if(trail.length>90) trail.shift(); }
+  else if(!walkingGuide){ const lt=trail[trail.length-1]; if(!lt||Math.hypot(P.x-lt[0],P.z-lt[1])>0.35){ trail.push([P.x,P.z]); if(trail.length>90) trail.shift(); }
     if(Math.hypot(P.x-laoPos.x,P.z-laoPos.z)>9){ laoPos.set(P.x-Math.sin(heading)*2.6,0.3,P.z-Math.cos(heading)*2.6); trail.length=0; }
     let acc=0, px=P.x, pz=P.z, tx=null, tz=null; for(let i=trail.length-1;i>=0;i--){ acc+=Math.hypot(trail[i][0]-px,trail[i][1]-pz); px=trail[i][0]; pz=trail[i][1]; if(acc>=2.6){ tx=px; tz=pz; break; } }
     if(tx!==null){ const dx=tx-laoPos.x, dz=tz-laoPos.z, d=Math.hypot(dx,dz); if(d>0.05){ const k=Math.min(1,dt*6); laoPos.x+=dx*k; laoPos.z+=dz*k; lao.rotation.y=Math.atan2(dx,dz); } }
     laoPos.y=mode==='inner'?innerY(laoPos.x,laoPos.z):0.3; }
-  lao.position.copy(laoPos); const lsw=(moving&&!inBoat)?Math.sin(walkPhase+1)*0.3:0; lao.userData.legL.rotation.x=lsw; lao.userData.legR.rotation.x=-lsw;
+  lao.position.copy(laoPos); const lsw=(walkingGuide?leaderWalking:moving&&!inBoat)?Math.sin(walkPhase+1)*0.3:0; lao.userData.legL.rotation.x=lsw; lao.userData.legR.rotation.x=-lsw;
   // 船
   boat.visible=inBoat;
   if(inBoat){
@@ -2528,8 +2529,114 @@ function resumeGame(v){ setReadingMode(v.done?savedChallengeMode(v):challengeCho
     rb.hidden=false; rb.textContent=sv.done?'看上次的結果和長卷':'繼續上次進度（已收集 '+Object.keys(sv.gotCards||{}).length+' 段景色）'; document.getElementById('go').textContent='重新開始';
     rb.addEventListener('click',()=>{ document.getElementById('start').hidden=true; ac(); musicStart(); playIntro(()=>resumeGame(sv)); }); } }
 
-// ---------- 迷路保險：30 秒沒有更接近目標，就出現「帶路」按鈕 ----------
-const helpBtn=document.getElementById('helpBtn'); const LOST={key:null,best:1e9,t:0,warned:false}; let autoPath=[];
+// ---------- 帶路 ----------
+const helpBtn=document.getElementById('helpBtn');
+const LOST={key:null,best:1e9,t:0,warned:false};
+const leadGap=2.6;
+let walkingGuide=null;
+
+function courtyardPath(from,to,besidePlayer=false){
+  const nodes=[from,to,...CORR.map(([x,z])=>new T.Vector3(x,0,z))];
+  for(const [a,b,c,d] of [...SOLID,[POND.x1,POND.z1,POND.x2,POND.z2]]){
+    for(const x of [Math.min(a,c)-.9,Math.max(a,c)+.9]){
+      for(const z of [Math.min(b,d)-.9,Math.max(b,d)+.9]){
+        if(!innerBlocked(x,z)) nodes.push(new T.Vector3(x,0,z));
+      }
+    }
+  }
+  if(besidePlayer){
+    const yaw=Math.atan2(to.x-P.x,to.z-P.z);
+    for(const side of [-1,1]){
+      const x=P.x+side*Math.cos(yaw)*1.16, z=P.z-side*Math.sin(yaw)*1.16;
+      if(!innerBlocked(x,z)) nodes.push(new T.Vector3(x,0,z));
+    }
+  }
+  const distance=nodes.map(()=>Infinity);
+  const previous=nodes.map(()=>-1);
+  const visited=nodes.map(()=>false);
+  distance[0]=0;
+  for(let count=0;count<nodes.length;count++){
+    let best=-1;
+    for(let i=0;i<nodes.length;i++){
+      if(!visited[i] && Number.isFinite(distance[i]) && (best<0 || distance[i]<distance[best])) best=i;
+    }
+    if(best<0 || best===1) break;
+    visited[best]=true;
+    const a=nodes[best];
+    for(let i=1;i<nodes.length;i++){
+      if(visited[i]) continue;
+      const b=nodes[i], length=Math.hypot(b.x-a.x,b.z-a.z);
+      if(distance[best]+length>=distance[i]) continue;
+      const samples=Math.max(1,Math.ceil(length/.28));
+      let open=true;
+      for(let step=1;step<=samples;step++){
+        const t=step/samples, x=a.x+(b.x-a.x)*t, z=a.z+(b.z-a.z)*t;
+        if(innerBlocked(x,z) || (besidePlayer && Math.hypot(x-P.x,z-P.z)<.88)){
+          open=false;
+          break;
+        }
+      }
+      if(open){ distance[i]=distance[best]+length; previous[i]=best; }
+    }
+  }
+  if(previous[1]<0) return null;
+  const path=[];
+  for(let i=1;i>=0;i=previous[i]) path.push({point:nodes[i].clone(),distance:distance[i]});
+  return path.reverse();
+}
+
+function walkingPoint(path,distance,position){
+  let i=1;
+  while(i<path.length-1 && path[i].distance<distance) i++;
+  const a=path[i-1], b=path[i];
+  const length=b.distance-a.distance;
+  const t=length>0?Math.min(1,Math.max(0,(distance-a.distance)/length)):1;
+  position.x=a.point.x+(b.point.x-a.point.x)*t;
+  position.z=a.point.z+(b.point.z-a.point.z)*t;
+  position.y=innerY(position.x,position.z);
+  return Math.atan2(b.point.x-a.point.x,b.point.z-a.point.z);
+}
+
+function endWalkingGuide(){
+  if(!walkingGuide) return;
+  walkingGuide=null;
+  trail.length=0;
+}
+
+function startWalkingGuide(goal){
+  const route=courtyardPath(P,new T.Vector3(goal.x,0,goal.z));
+  if(!route) return false;
+  const total=route[route.length-1].distance;
+  const ahead=Math.min(leadGap,total);
+  const lead=new T.Vector3();
+  walkingPoint(route,ahead,lead);
+  const approach=Math.hypot(laoPos.x-lead.x,laoPos.z-lead.z)<.1
+    ? null : (courtyardPath(laoPos,lead,true)||courtyardPath(laoPos,lead));
+  if(!approach && Math.hypot(laoPos.x-lead.x,laoPos.z-lead.z)>=.1) return false;
+  target=null;
+  trail.length=0;
+  walkingGuide={route,total,ahead,approach,progress:0,leadDistance:ahead,kidDistance:0};
+  return true;
+}
+
+function walkWithLao(dt){
+  const guide=walkingGuide;
+  if(guide.approach){
+    const total=guide.approach[guide.approach.length-1].distance;
+    guide.progress=Math.min(total,guide.progress+dt*7.5);
+    lao.rotation.y=walkingPoint(guide.approach,guide.progress,laoPos);
+    if(guide.progress>=total) guide.approach=null;
+    return {moving:false,leaderWalking:true};
+  }
+  const leadWas=guide.leadDistance, kidWas=guide.kidDistance;
+  guide.leadDistance=Math.min(guide.total,leadWas+dt*6.2);
+  guide.kidDistance=Math.min(guide.total,kidWas+dt*6.2,guide.leadDistance===guide.total
+    ? guide.total : guide.leadDistance-guide.ahead);
+  lao.rotation.y=walkingPoint(guide.route,guide.leadDistance,laoPos);
+  heading=walkingPoint(guide.route,guide.kidDistance,P);
+  return {moving:guide.kidDistance>kidWas,leaderWalking:guide.leadDistance>leadWas};
+}
+
 function lostTarget(){ if(talking||mode==='turn'||step<0) return null;
   if(mode==='lake' && wordKey){ const k=tokens.find(o=>!o.got && o.i===wordGot); if(k) return {key:'w'+wordKey+wordGot,x:k.x,z:k.z}; }
   const s=nextStation(); return s?{key:(mode==='inner'?'i':'s')+(s.name||s.id),x:s.x,z:s.z}:null; }
@@ -2538,14 +2645,22 @@ function updLost(dt){ const g=lostTarget(); if(!g){ helpBtn.hidden=true; helpBtn
   const d=Math.hypot(P.x-g.x,P.z-g.z); if(d<LOST.best-2){ LOST.best=d; LOST.t=0; } else LOST.t+=dt;
   if(LOST.t>18 && !LOST.warned){ LOST.warned=true; toast('找不到路嗎？跟著紅色箭頭和羅盤走'); }
   helpBtn.hidden=false;
-  const guiding=helpBtn.disabled && !!(target||autoPath.length);
+  const guiding=mode==='inner'?!!walkingGuide:helpBtn.disabled&&!!target;
   helpBtn.disabled=guiding;
   helpBtn.textContent=guiding?'帶路中…':(mode==='inner'?'👣 請老殘帶路':'🚣 請船家帶路'); }
-helpBtn.addEventListener('click',()=>{ const g=lostTarget(); helpBtn.disabled=!!g; LOST.t=0; LOST.best=1e9; if(!g) return;
-  autoPath=[]; if(mode==='inner' && g.x<-3 && P.x>-3) autoPath=CORR.map(p=>[p[0],p[1]]).filter(p=>p[0]>=g.x-1);   // 要過荷池：先沿著迴廊走
-  autoPath.push([g.x,g.z]); const f=autoPath.shift(); target=new T.Vector3(f[0],0.3,f[1]); });
-setInterval(()=>{ if(!target && autoPath.length && !talking){ const f=autoPath.shift(); target=new T.Vector3(f[0],0.3,f[1]); } },200);
-addEventListener('keydown',()=>{ if(!journeyMap.open) autoPath=[]; }); document.getElementById('pad').addEventListener('pointerdown',()=>{ autoPath=[]; });
+helpBtn.addEventListener('click',()=>{
+  const g=lostTarget();
+  if(!g) return;
+  LOST.t=0;
+  LOST.best=1e9;
+  if(mode==='inner'){
+    helpBtn.disabled=startWalkingGuide(g);
+    if(!helpBtn.disabled) toast('請往空地走幾步，再請老殘帶路');
+  }else{
+    helpBtn.disabled=true;
+    target=new T.Vector3(g.x,.3,g.z);
+  }
+});
 
 // ---------- 課文朗讀（用平板內建的中文語音，iPad Safari 也能用） ----------
 const TTS={v:null,ok:'speechSynthesis' in window};
