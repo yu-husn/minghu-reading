@@ -504,6 +504,20 @@
     stopEntranceCheer = undefined;
   });
 
+  function shakeHead(ctx,pixels,time) {
+    const beat = clamp((time-.48)/1.6);
+    const shake = Math.sin(beat*4*Math.PI)*Math.sin(beat*Math.PI);
+    const turnAway = smooth((time-2.03)/.72);
+    warp(ctx,pixels,[278,83,108,102],(x,y)=>{
+      const face = smooth((x-248)/88);
+      const taper = 1-smooth((y-123)/50);
+      return [
+        (shake*(5+12*face)-turnAway*6*face)*taper,
+        (shake*.045*(x-271)-turnAway*5*face)*taper
+      ];
+    });
+  }
+
   const scenes = {
     'prodigy': {duration:3.6, paint:drum, readsPixels:true},
     'blending-tunes': {duration:4.6, paint:(ctx,pixels,time)=>blend(ctx,time)},
@@ -516,7 +530,8 @@
     'mountain-serpent': {duration:5.3, paint:serpent, background:'serpent'},
     'underground-tone': {duration:3.5, paint:underground, sound:playRise},
     'fireworks': {duration:3.9, paint:fireworks, sound:playFireworks},
-    'applause': {duration:5, paint:clapping, readsPixels:true, sound:playCheering}
+    'applause': {duration:5, paint:clapping, readsPixels:true, sound:playCheering},
+    'forgotten-meal': {duration:3.8, paint:shakeHead, readsPixels:true}
   };
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   function playScene(art) {

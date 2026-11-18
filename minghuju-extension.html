@@ -482,7 +482,7 @@ const metaphorGrouping = {
   10:[2,1,1], 11:[1,1,1,1,1], 12:[1,1], 13:[1]
 };
 
-const animatedMetaphors = new Set(['prodigy','blending-tunes','many-strings','oriole','swallow','silver-wire','thunder','jade-plate','mountain-serpent','underground-tone','fireworks']);
+const animatedMetaphors = new Set(['prodigy','blending-tunes','many-strings','oriole','swallow','silver-wire','thunder','jade-plate','mountain-serpent','underground-tone','fireworks','forgotten-meal']);
 function renderMetaphorGallery(number, cards, groupIndex) {
   const grouped = cards.length > 1;
   const title = grouped ? cards.map(card => card[1]).join('、') : cards[0][1];
@@ -566,7 +566,7 @@ playWhenVisible([...document.querySelectorAll('[data-scene]')].filter(scene=>zoo
   if (reducedMotion.matches) return;
   const zoom = scene.querySelector('.section-art').animate(
     [{transform:'none'},{transform:zoomTargets[scene.dataset.scene]}],
-    {duration:4200,easing:'ease-in-out',fill:'forwards'}
+    {duration:7200,easing:'ease-in-out',fill:'forwards'}
   );
   return ()=>zoom.cancel();
 });
@@ -620,6 +620,8 @@ const entranceCues = [
   [64600, 'applause', applauseQuote, 11]
 ];
 const entranceDuration = 69500;
+const entranceOpening = 11500;
+const slowEntranceOpening = milliseconds => milliseconds+Math.min(milliseconds,entranceOpening)*.25;
 
 let entrancesPlaying = false;
 let entranceTimers = [];
@@ -695,8 +697,8 @@ playWhenVisible([entranceFrames],()=>{
       setTimeout(()=>{
         showEntranceFrame(frame,caption,paragraph);
         if (frame==='applause') window.dispatchEvent(new Event('minghu-entrance-applause'));
-      },delay));
-    entranceTimers.push(setTimeout(()=>stopEntrance(true),entranceDuration));
+      },slowEntranceOpening(delay)));
+    entranceTimers.push(setTimeout(()=>stopEntrance(true),slowEntranceOpening(entranceDuration)));
   });
   return ()=>{
     visible = false;
