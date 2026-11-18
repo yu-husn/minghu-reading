@@ -26,7 +26,7 @@ section{margin-top:28px;scroll-margin-top:12px}.group,fieldset{background:var(--
 .entrance-frame{position:absolute;inset:0;opacity:0;transition:opacity .5s ease}
 .entrance-frame.is-visible{z-index:1;opacity:1}
 .entrance-frame.is-underneath{opacity:1;transition:none}
-.entrance-frames > img:first-child,.entrance-frame:is([data-frame="lowered"],[data-frame="tap"],[data-frame^="singing"]){transform-origin:52% 30%}
+.entrance-frames > img:first-child,.entrance-frame:is([data-frame="lowered"],[data-frame="tap"],[data-frame^="singing"]){transform-origin:52% 16%}
 .entrance-frame:is([data-frame="tap"],[data-frame^="singing"]){transition-duration:.18s}
 .entrance-frames{overflow:hidden}
 .entrance-frame[data-frame="taishan"].is-visible{animation:climb 12s ease-out both}
@@ -704,7 +704,7 @@ playWhenVisible([entranceFrames],()=>{
     entranceFrameImages = images;
     entrancesPlaying = true;
     entranceCloseups = [entranceFrames.firstElementChild,images.lowered,images.tap,images['singing-soft'],images['singing-open']].map(image=>
-      image.animate([{transform:'scale(1.08)'},{transform:'scale(1.35)'}],{duration:3400,easing:'ease-out',fill:'both'}));
+      image.animate([{transform:'scale(1.015)'},{transform:'scale(1.12)'}],{duration:3400,easing:'ease-out',fill:'both'}));
     const [,firstFrame,firstCaption] = entranceCues[0];
     showEntranceFrame(firstFrame,firstCaption);
     entranceTimers = entranceCues.slice(1).map(([delay,frame,caption,paragraph]) =>
