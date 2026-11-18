@@ -589,10 +589,35 @@
     }
   }
 
+  const peelEdges = [
+    [312,39,98,35,0],[641,182,81,72,.19],
+    [94,317,71,77,.38],[492,431,57,53,.59]
+  ];
+
+  function peelInWind(ctx,pixels,time) {
+    for (const [x,y,rx,ry,delay] of peelEdges) {
+      const local = Math.max(0,time-delay);
+      const firstGust = Math.exp(-Math.pow((local-1.18)/.69,2));
+      const secondGust = .77*Math.exp(-Math.pow((local-3.38)/.82,2));
+      const flutter = (firstGust+secondGust)*(Math.sin(local*8.5)+.28*Math.sin(local*16.8));
+      warp(ctx,pixels,[x,y,rx,ry],()=>[4.4*flutter,-9.5*flutter]);
+    }
+  }
+
+  function rockEgg(ctx,pixels,time) {
+    const movement = smooth(time/.42)*(1-smooth((time-2.8)/1.65));
+    const angle = .122*movement*Math.sin(time*4.9);
+    warp(ctx,pixels,[382,166,197,191],(x,y)=>[
+      angle*(365-y),angle*(x-382)
+    ]);
+  }
+
   const scenes = {
     'prodigy': {duration:4.85, paint:drum, background:'prodigy', masks:drumMasks},
     'blending-tunes': {duration:4.6, paint:(ctx,pixels,time)=>blend(ctx,time)},
+    'dried-peel': {duration:5.7, paint:peelInWind, readsPixels:true},
     'many-strings': {duration:3.5, paint:strings, readsPixels:true},
+    'duck-egg': {duration:4.5, paint:rockEgg, readsPixels:true},
     'oriole': {duration:4.2, paint:(ctx,pixels,time,layers)=>bird(ctx,time,layers,false), background:'oriole',
       recording:'minghuju-oriole-call.wav', independentSound:true, sound:(audio,clip)=>clip?[playBuffer(audio,clip,.62,.42)]:[]},
     'swallow': {duration:4.2, paint:(ctx,pixels,time,layers)=>bird(ctx,time,layers,true), background:'swallow',
