@@ -58,28 +58,41 @@
     ctx.stroke();
   }
 
-  function drum(ctx, pixels, time) {
-    const beat = (time / .96) % 1;
-    const up = Math.sin(Math.PI * Math.min(1, beat / .74));
-    warp(ctx, pixels, [414, 364, 116, 76], (x) => [
-      0, -up * (7 + clamp((x - 343) / 120) * 26)
-    ]);
-    const click = (time / .48 + .12) % 1;
-    const wrist = Math.sin(click * Math.PI * 2);
-    warp(ctx, pixels, [645, 223, 81, 86], (x, y) => [
-      wrist * Math.max(0, 256 - y) * (x > 646 ? -.10 : .04),
-      wrist * 2
-    ]);
-    echo(ctx, 467, 422, (beat - .74) * 3.6, 91, 18);
-    echo(ctx, 660, 204, click * 2.1, 30, 14);
+  const drumMasks = [
+    // Torso, hair and sleeves behind the moving forearms.
+    'M 227 508 Q 245 475 256 450 L 206 508 L 206 502 Q 244 457 272 446 L 240 452 Q 251 440 273 439 L 307 425 L 326 402 L 329 376 L 339 357 L 311 343 Q 272 358 232 348 Q 211 350 205 325 Q 193 289 219 252 Q 235 231 267 231 L 343 225 Q 361 206 381 196 L 398 188 Q 395 161 407 142 L 378 177 L 375 172 Q 382 145 405 122 Q 396 110 409 93 Q 423 72 452 80 Q 477 70 510 80 Q 538 87 549 112 Q 561 149 550 177 Q 559 196 539 208 Q 519 244 497 248 L 524 249 L 552 263 L 581 271 Q 596 274 608 283 L 623 290 L 642 287 Q 662 290 657 329 Q 656 365 632 383 Q 605 393 582 379 Q 534 372 501 385 Q 476 405 418 414 Q 369 418 348 430 Q 336 444 344 508 Z',
+    // Right forearm, wrist and mallet.
+    'M 251 293 Q 262 279 279 282 Q 301 288 323 302 L 346 318 Q 362 320 375 329 Q 383 336 381 350 L 456 389 Q 467 384 478 394 Q 487 401 486 410 Q 484 426 466 427 Q 446 426 447 402 L 382 367 Q 377 375 367 374 Q 348 373 337 365 Q 325 356 322 340 Q 287 326 253 309 Z',
+    // Left forearm and the inner clapper.
+    'M 611 321 Q 614 297 622 273 L 623 253 Q 616 240 622 229 L 643 174 Q 653 172 665 180 L 647 227 Q 655 229 662 237 Q 666 246 660 257 L 650 275 Q 647 309 626 337 Q 617 340 611 321 Z',
+    // Outer clapper, hinged at the grip.
+    'M 651 229 L 688 191 Q 696 191 705 203 L 658 249 Z'
+  ];
+
+  function swingLayer(ctx, image, x, y, angle) {
     ctx.save();
-    const focus = ctx.createRadialGradient(478,251,115,478,251,410);
-    focus.addColorStop(0,'rgba(47,33,22,0)');
-    focus.addColorStop(.58,'rgba(47,33,22,.09)');
-    focus.addColorStop(1,'rgba(47,33,22,.37)');
-    ctx.fillStyle=focus;
-    ctx.fillRect(0,0,width,height);
+    ctx.translate(x,y);
+    ctx.rotate(angle);
+    ctx.drawImage(image,-x,-y);
     ctx.restore();
+  }
+
+  function drum(ctx, pixels, time, [torso, strikeArm, clapperArm, outerClapper]) {
+    const beat = (time / 1.24 + .16) % 1;
+    const lift = beat < .66 ? smooth(beat/.66) : 1-smooth((beat-.66)/.18);
+    const click = (time / .62 + .12) % 1;
+    const clapperTilt = .075*Math.sin(click*Math.PI*2);
+    ctx.drawImage(torso,0,0);
+    swingLayer(ctx,strikeArm,261,300,-.24*lift);
+    ctx.save();
+    ctx.translate(622,321);
+    ctx.rotate(clapperTilt);
+    ctx.translate(-622,-321);
+    swingLayer(ctx,outerClapper,654,247,-.19*Math.sin(Math.PI*click));
+    ctx.drawImage(clapperArm,0,0);
+    ctx.restore();
+    echo(ctx,467,423,(beat-.84)*5.4,85,15);
+    echo(ctx,661,201,(click-.64)*3.3,27,13);
   }
 
   const braid = 'C 333 258 402 290 371 319 C 345 347 395 359 376 384';
@@ -139,8 +152,8 @@
       'M 188 354 Q 233 330 280 319 Q 319 307 338 296 Q 353 279 368 260 Q 385 241 395 237 Q 407 217 428 218 Q 440 218 445 224 L 455 218 L 453 225 L 446 228 Q 435 239 428 259 Q 423 279 410 289 L 429 285 L 436 294 L 425 294 L 410 307 L 410 319 L 400 322 L 403 309 L 389 324 Q 377 329 365 329 L 341 345 L 234 409 Q 230 409 235 403 L 302 348 L 283 347 L 319 326 Q 246 337 188 356 Z'
     ]
   };
-  function birdLayers(image,id) {
-    return birdMasks[id].map(shape=>{
+  function cutoutLayers(image,masks) {
+    return masks.map(shape=>{
       const layer = document.createElement('canvas');
       layer.width = width;
       layer.height = height;
@@ -149,6 +162,27 @@
       ctx.drawImage(image,0,0,width,height);
       return layer;
     });
+  }
+  function repairDrummerTorso(image,torso) {
+    const ctx = torso.getContext('2d');
+    // Fill the robe where the painted hand and mallet used to cover it.
+    const patch = document.createElement('canvas');
+    const mask = document.createElement('canvas');
+    patch.width = mask.width = width;
+    patch.height = mask.height = height;
+    const repair = patch.getContext('2d');
+    const edge = mask.getContext('2d');
+    edge.filter='blur(3px)';
+    edge.fill(new Path2D('M 321 326 Q 347 316 378 326 Q 387 331 387 349 L 459 386 Q 475 381 487 393 Q 490 406 483 419 L 447 421 L 442 403 L 382 370 Q 377 381 362 379 Q 336 377 326 363 Z'));
+    const sx = image.naturalWidth/width;
+    const sy = image.naturalHeight/height;
+    repair.drawImage(image,362*sx,374*sy,75*sx,34*sy,304,305,196,127);
+    repair.globalCompositeOperation='destination-in';
+    repair.drawImage(mask,0,0);
+    ctx.save();
+    ctx.globalCompositeOperation='source-atop';
+    ctx.drawImage(patch,0,0);
+    ctx.restore();
   }
   function bird(ctx, time, [wing,body], returning) {
     const travel = smooth(time / 4.0);
@@ -189,7 +223,8 @@
     return audioContext;
   }
 
-  function playThunder(audio) {
+  function playThunder(audio,recording) {
+    if (recording) return [playBuffer(audio,recording,.82,.68)];
     const duration = 3.4;
     const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * duration), audio.sampleRate);
     const samples = buffer.getChannelData(0);
@@ -392,45 +427,69 @@
     const hands = [
       [435,250,29,36,0],[584,232,28,30,.2],[259,286,32,33,.7],
       [88,219,24,27,.28],[287,227,19,32,.64],[444,183,20,25,.41],
-      [577,169,16,22,.15],[616,340,32,38,.52],[723,266,24,30,.31],[130,175,18,21,.77]
+      [577,169,16,22,.15],[615,340,26,38,.52],[724,266,24,30,.31],[130,166,18,21,.77],
+      [164,321,20,34,.27],[563,351,21,33,.65],[187,182,14,17,.19],
+      [233,151,13,15,.86],[371,151,14,16,.44],[328,147,13,15,.71],
+      [622,165,13,18,.95],[682,194,14,17,.33],[750,208,13,18,.63]
     ];
     for(const [x,y,rx,ry,phase] of hands) {
-      const beat = (time/.42+phase)%1;
+      const beat = (time/(.32+.13*phase)+phase)%1;
       warp(ctx,pixels,[x,y,rx,ry],(column) => [
-        (column-x)*.40*Math.sin(beat*Math.PI),-4*Math.sin(beat*Math.PI*2)
+        (column-x)*.58*Math.sin(beat*Math.PI),-4.4*Math.sin(beat*Math.PI*2)
       ]);
     }
   }
 
-  function playBuffer(audio,buffer,level,delay=0,rate=1) {
+  function playBuffer(audio,buffer,level,delay=0,rate=1,destination=audio.destination) {
     const source = audio.createBufferSource();
     const gain = audio.createGain();
     source.buffer = buffer;
     source.playbackRate.value = rate;
     gain.gain.value = level;
-    source.connect(gain).connect(audio.destination);
+    source.connect(gain).connect(destination);
     source.start(audio.currentTime+delay);
     return source;
   }
+  let cheeringBus;
   function playCheering(audio,buffer) {
     if (!buffer) return [];
+    if (!cheeringBus) {
+      cheeringBus = audio.createDynamicsCompressor();
+      cheeringBus.threshold.value = -13;
+      cheeringBus.ratio.value = 4;
+      cheeringBus.connect(audio.destination);
+    }
+    const claps = audio.createBuffer(1,Math.floor(audio.sampleRate*4.4),audio.sampleRate);
+    const samples = claps.getChannelData(0);
+    for (let i=0;i<124;i++) {
+      const at = Math.floor((.04+i*.032+Math.random()*.09)*audio.sampleRate);
+      const level = .065+Math.random()*.11;
+      for (let j=0;j<audio.sampleRate*.046&&at+j<samples.length;j++) {
+        const seconds = j/audio.sampleRate;
+        samples[at+j] += (Math.random()*2-1)*level*Math.exp(-seconds*(95+i%53))*Math.min(1,seconds*550);
+      }
+    }
     return [
-      playBuffer(audio,buffer,.65),
-      playBuffer(audio,buffer,.37,.16,.91),
-      playBuffer(audio,buffer,.22,.33,1.08)
+      playBuffer(audio,buffer,.79,0,1,cheeringBus),
+      playBuffer(audio,buffer,.52,.12,.97,cheeringBus),
+      playBuffer(audio,buffer,.33,.27,1.09,cheeringBus),
+      playBuffer(audio,buffer,.20,.44,.93,cheeringBus),
+      playBuffer(audio,claps,.69,.13,1,cheeringBus)
     ];
   }
 
-  let cheeringClip;
-  function prepareCheering(audio) {
-    cheeringClip ??= fetch('audio/minghuju-cheering.mp3').then(response => {
-      if (!response.ok) throw new Error('Cheering audio unavailable');
-      return response.arrayBuffer();
-    }).then(bytes => audio.decodeAudioData(bytes)).catch(() => {
-      cheeringClip = undefined;
-      return null;
-    });
-    return cheeringClip;
+  const recordings = new Map();
+  function prepareRecording(audio,file) {
+    if (!recordings.has(file)) {
+      recordings.set(file,fetch('audio/'+file).then(response=>{
+        if (!response.ok) throw new Error('Audio unavailable');
+        return response.arrayBuffer();
+      }).then(bytes=>audio.decodeAudioData(bytes)).catch(()=>{
+        recordings.delete(file);
+        return null;
+      }));
+    }
+    return recordings.get(file);
   }
 
   function steelWire(ctx, pixels, time) {
@@ -458,8 +517,8 @@
   }
 
   let lastSound;
-  function startSound(play) {
-    lastSound?.();
+  function startSound(play,independent=false) {
+    if (!independent) lastSound?.();
     const sounds = play();
     const stop = () => {
       for (const sound of sounds) {
@@ -468,7 +527,7 @@
       }
       if (lastSound===stop) lastSound = undefined;
     };
-    lastSound = stop;
+    if (!independent) lastSound = stop;
     return stop;
   }
 
@@ -480,7 +539,7 @@
       audio.resume().then(()=>{
         window.removeEventListener('pointerup',enableAudio,true);
         window.removeEventListener('keydown',enableAudio,true);
-        prepareCheering(audio);
+        prepareRecording(audio,'minghuju-cheering.mp3');
       }).catch(()=>{});
     } catch {}
   }
@@ -493,7 +552,7 @@
     if (audioContext?.state!=='running') return;
     const token = {};
     entranceApplauseToken = token;
-    const buffer = await prepareCheering(audioContext);
+    const buffer = await prepareRecording(audioContext,'minghuju-cheering.mp3');
     if (buffer && entranceApplauseToken===token) {
       stopEntranceCheer = startSound(()=>playCheering(audioContext,buffer));
     }
@@ -518,19 +577,34 @@
     });
   }
 
+  function mountainWind(ctx,pixels,time) {
+    const veil = smooth(time/.7)*(1-smooth((time-5)/1.2));
+    const crowns = [[106,63,100,34,.1],[133,96,79,26,.65],[76,295,108,37,.46],
+      [180,373,91,28,.84],[265,218,62,21,.33],[324,105,31,15,.52]];
+    for (const [x,y,rx,ry,phase] of crowns) {
+      const wind = veil*(Math.sin(2.4*time+phase)*2.7+Math.sin(4.1*time+phase)*1.1);
+      warp(ctx,pixels,[x,y,rx,ry],(column,row)=>[
+        wind*(.6+.4*smooth((column-x+rx)/rx)),wind*.55*(1-smooth((row-y+8)/24))
+      ]);
+    }
+  }
+
   const scenes = {
-    'prodigy': {duration:3.6, paint:drum, readsPixels:true},
+    'prodigy': {duration:4.85, paint:drum, background:'prodigy', masks:drumMasks},
     'blending-tunes': {duration:4.6, paint:(ctx,pixels,time)=>blend(ctx,time)},
     'many-strings': {duration:3.5, paint:strings, readsPixels:true},
-    'oriole': {duration:4.2, paint:(ctx,pixels,time,layers)=>bird(ctx,time,layers,false), background:'oriole'},
-    'swallow': {duration:4.2, paint:(ctx,pixels,time,layers)=>bird(ctx,time,layers,true), background:'swallow'},
+    'oriole': {duration:4.2, paint:(ctx,pixels,time,layers)=>bird(ctx,time,layers,false), background:'oriole',
+      recording:'minghuju-oriole-call.wav', independentSound:true, sound:(audio,clip)=>clip?[playBuffer(audio,clip,.62,.42)]:[]},
+    'swallow': {duration:4.2, paint:(ctx,pixels,time,layers)=>bird(ctx,time,layers,true), background:'swallow',
+      recording:'minghuju-swallow-call.wav', independentSound:true, sound:(audio,clip)=>clip?[playBuffer(audio,clip,.54,1.8)]:[]},
     'silver-wire': {duration:3.4, paint:steelWire},
-    'thunder': {duration:4.5, paint:lightning, sound:playThunder},
+    'taishan': {duration:6.3, paint:mountainWind, readsPixels:true},
+    'thunder': {duration:5.7, paint:lightning, sound:playThunder, recording:'minghuju-thunder-call.wav'},
     'jade-plate': {duration:3.9, paint:pearls, sound:playPearls},
     'mountain-serpent': {duration:5.3, paint:serpent, background:'serpent'},
     'underground-tone': {duration:3.5, paint:underground, sound:playRise},
     'fireworks': {duration:3.9, paint:fireworks, sound:playFireworks},
-    'applause': {duration:5, paint:clapping, readsPixels:true, sound:playCheering},
+    'applause': {duration:5, paint:clapping, readsPixels:true, sound:playCheering, recording:'minghuju-cheering.mp3'},
     'forgotten-meal': {duration:3.8, paint:shakeHead, readsPixels:true}
   };
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -563,14 +637,16 @@
       const audio = audioContext?.state==='running'?audioContext:undefined;
       const [, ,clip] = await Promise.all([
         image.decode(),backdrop===image?undefined:backdrop.decode(),
-        audio&&id==='applause'?prepareCheering(audio):undefined
+        audio&&scene.recording?prepareRecording(audio,scene.recording):undefined
       ]);
       if (!active) return;
-      if (scene.sound && audio) stopSound = startSound(()=>scene.sound(audio,clip));
+      if (scene.sound && audio) stopSound = startSound(()=>scene.sound(audio,clip),scene.independentSound);
       if (reduced) return;
       ctx.drawImage(backdrop,0,0,width,height);
       const pixels = scene.readsPixels?ctx.getImageData(0,0,width,height).data:undefined;
-      const layers = birdMasks[id]?birdLayers(image,id):undefined;
+      const masks = scene.masks || birdMasks[id];
+      const layers = masks?cutoutLayers(image,masks):undefined;
+      if (id==='prodigy') repairDrummerTorso(image,layers[0]);
       art.append(canvas);
       const startTime = performance.now();
       function draw(now) {

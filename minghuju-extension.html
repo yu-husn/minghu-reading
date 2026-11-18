@@ -26,6 +26,7 @@ section{margin-top:28px;scroll-margin-top:12px}.group,fieldset{background:var(--
 .entrance-frame{position:absolute;inset:0;opacity:0;transition:opacity .5s ease}
 .entrance-frame.is-visible{z-index:1;opacity:1}
 .entrance-frame.is-underneath{opacity:1;transition:none}
+.entrance-frames > img:first-child,.entrance-frame:is([data-frame="lowered"],[data-frame="tap"],[data-frame^="singing"]){transform-origin:52% 30%}
 .entrance-frame:is([data-frame="tap"],[data-frame^="singing"]){transition-duration:.18s}
 .entrance-frames{overflow:hidden}
 .entrance-frame[data-frame="taishan"].is-visible{animation:climb 12s ease-out both}
@@ -482,7 +483,11 @@ const metaphorGrouping = {
   10:[2,1,1], 11:[1,1,1,1,1], 12:[1,1], 13:[1]
 };
 
-const animatedMetaphors = new Set(['prodigy','blending-tunes','many-strings','oriole','swallow','silver-wire','thunder','jade-plate','mountain-serpent','underground-tone','fireworks','forgotten-meal']);
+const animatedMetaphors = new Set(['prodigy','blending-tunes','many-strings','oriole','swallow','silver-wire','taishan','thunder','jade-plate','mountain-serpent','underground-tone','fireworks','forgotten-meal']);
+const birdCredits = {
+  oriole:['https://commons.wikimedia.org/wiki/File:Blacknapedoriole.ogg','L. Shyamal','by-sa','CC BY-SA 3.0'],
+  swallow:['https://commons.wikimedia.org/wiki/File:BarnSwallows.ogg','Justin Wasack','by','CC BY 3.0']
+};
 function renderMetaphorGallery(number, cards, groupIndex) {
   const grouped = cards.length > 1;
   const title = grouped ? cards.map(card => card[1]).join('、') : cards[0][1];
@@ -491,10 +496,12 @@ function renderMetaphorGallery(number, cards, groupIndex) {
     +'<summary>看意象圖｜'+esc(title)+(grouped?'（'+cards.length+' 張）':'')+'</summary>'
     +'<div class="metaphor-grid">'+cards.map(([id,name,quote,description,alt,kind,reuse]) => {
       const motion = animatedMetaphors.has(id)?' data-motion="'+id+'"':'';
+      const credit = birdCredits[id];
       return '<figure class="metaphor-card"><div class="metaphor-art"'+motion+'><img width="768" height="512" loading="lazy" decoding="async" src="img/minghuju-'
       +(reuse ? '' : 'metaphor-')+id+'.jpg" alt="'+esc(alt)+'"><span class="metaphor-label">'+esc(kind||'譬喻想像')
       +'</span></div><figcaption><strong class="metaphor-title">'+esc(name)+'</strong><blockquote>'+esc(quote)
       +'</blockquote><p class="metaphor-description" hidden>'+esc(description)+'</p>'
+      +(credit?'<small>鳥鳴錄音節選 · <a href="'+credit[0]+'">'+credit[1]+'</a> · <a href="https://creativecommons.org/licenses/'+credit[2]+'/3.0/">'+credit[3]+'</a></small>':'')
       +'</figcaption></figure>';
     }
     ).join('')+'</div></details>';
@@ -625,6 +632,7 @@ const slowEntranceOpening = milliseconds => milliseconds+Math.min(milliseconds,e
 
 let entrancesPlaying = false;
 let entranceTimers = [];
+let entranceCloseups = [];
 let entranceFrameImages;
 let currentEntranceFrame;
 let entranceFrameLoad;
@@ -677,7 +685,11 @@ function stopEntrance(completed = false) {
   entranceTimers = [];
   entrancesPlaying = false;
   window.dispatchEvent(new Event('minghu-entrance-stop'));
-  if (!completed && entranceFrameImages) showEntranceFrame('glance', lastEntranceCaption);
+  if (!completed) {
+    entranceCloseups.forEach(closeup=>closeup.cancel());
+    entranceCloseups = [];
+    if (entranceFrameImages) showEntranceFrame('glance', lastEntranceCaption);
+  }
 }
 
 playWhenVisible([entranceFrames],()=>{
@@ -691,6 +703,8 @@ playWhenVisible([entranceFrames],()=>{
     if (!visible || !images || entranceFrames.closest('.station').hidden) return;
     entranceFrameImages = images;
     entrancesPlaying = true;
+    entranceCloseups = [entranceFrames.firstElementChild,images.lowered,images.tap,images['singing-soft'],images['singing-open']].map(image=>
+      image.animate([{transform:'scale(1.08)'},{transform:'scale(1.35)'}],{duration:3400,easing:'ease-out',fill:'both'}));
     const [,firstFrame,firstCaption] = entranceCues[0];
     showEntranceFrame(firstFrame,firstCaption);
     entranceTimers = entranceCues.slice(1).map(([delay,frame,caption,paragraph]) =>
