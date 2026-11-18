@@ -829,12 +829,28 @@ function lakeOar(length){
   blade.rotation.y=.14;
   return pivot;
 }
+function rower(robe,scale,z,oarLength,small){
+  const man=figure(robe,small);
+  man.scale.setScalar(scale);
+  man.position.set(0,.26,z);
+  const hat=new T.Group();
+  const crown=new T.Mesh(new T.ConeGeometry(.47,.24,18),lam('#c1a063'));
+  crown.position.y=.15;
+  hat.add(crown,new T.Mesh(new T.CylinderGeometry(.48,.48,.045,18),lam('#a4804d')));
+  hat.position.set(0,small?.23:.28,.03);
+  man.userData.hat.visible=false;
+  man.userData.head.add(hat);
+  const oar=lakeOar(oarLength);
+  oar.position.copy(man.userData.rightHand.position);
+  man.add(oar);
+  return {man,oar};
+}
 const boat=lakeBoat(2.55,7.7);
 scene.add(boat);
 boat.visible=false;
-const playerOar=lakeOar(3.6);
-playerOar.position.set(.96,.57,-1.12);
-boat.add(playerOar);
+const boatman=rower('#69654c',1.44,-2.70,2.9,false);
+boatman.man.name='船夫';
+boat.add(boatman.man);
 // 水鳥
 const birds=[]; const birdMat=lam('#f7f7f2');
 function spawnBirds(x,z){ for(let i=0;i<9;i++){ const b=new T.Group(); const wl=new T.Mesh(new T.BoxGeometry(1.1,0.06,0.4),birdMat), wr=wl.clone(); wl.position.x=-0.55; wr.position.x=0.55; const bd=new T.Mesh(new T.SphereGeometry(0.22,6,5),birdMat); b.add(wl,wr,bd);
@@ -847,21 +863,8 @@ box(2.4,1,1.2,'#8a6a46',-37.5,0.8,-32.2); box(2.2,0.05,0.9,'#f6f0e0',-37.5,1.33,
 // ---------- 湖面的點綴：漁船、霧氣、遠處飛鳥 ----------
 const fishers=[[22,-18,.4],[-34,10,2.1],[18,26,4]].map(([x,z,heading])=>{
   const g=lakeBoat(1.75,5.1);
-  const man=figure('#426473',true);
-  man.scale.setScalar(1.28);
-  man.position.set(0,.26,-.55);
+  const {man,oar}=rower('#426473',1.28,-.55,2.9,true);
   g.add(man);
-  const hat=new T.Group();
-  const crown=new T.Mesh(new T.ConeGeometry(.47,.24,18),lam('#c1a063'));
-  crown.position.y=.15;
-  hat.add(crown,new T.Mesh(new T.CylinderGeometry(.48,.48,.045,18),lam('#a4804d')));
-  hat.position.set(0,.23,.03);
-  man.userData.hat.visible=false;
-  man.userData.head.add(hat);
-  const oar=lakeOar(2.9);
-  oar.position.copy(man.userData.rightHand.position);
-  // 以手握處為軸划動，槳葉在船舷外進出水面。
-  man.add(oar);
   g.position.set(x,0,z);
   g.rotation.y=heading;
   scene.add(g);
@@ -2460,7 +2463,7 @@ function loop(){ const raw=clock.getDelta(), dt=Math.min(raw,0.05), t=clock.elap
   const boatRise=.05+Math.sin(t*2)*.06;
   kid.position.set(P.x, inBoat?.2+boatRise:(mode==='inner'?innerY(P.x,P.z):.3), P.z); kid.rotation.y=heading;
   const sw=moving&&!inBoat?Math.sin(walkPhase)*0.35:0; kid.userData.legL.rotation.x=sw; kid.userData.legR.rotation.x=-sw;
-  // 老殘：走路時跟在後面，坐船時坐在船尾
+  // 老殘走路時跟在後面，搭船時位於小藥童和船夫之間。
   if(inBoat){ laoPos.set(P.x-Math.sin(heading)*2.2,.2+boatRise,P.z-Math.cos(heading)*2.2); lao.rotation.y=heading; }
   else { const lt=trail[trail.length-1]; if(!lt||Math.hypot(P.x-lt[0],P.z-lt[1])>0.35){ trail.push([P.x,P.z]); if(trail.length>90) trail.shift(); }
     if(Math.hypot(P.x-laoPos.x,P.z-laoPos.z)>9){ laoPos.set(P.x-Math.sin(heading)*2.6,0.3,P.z-Math.cos(heading)*2.6); trail.length=0; }
@@ -2471,10 +2474,11 @@ function loop(){ const raw=clock.getDelta(), dt=Math.min(raw,0.05), t=clock.elap
   // 船
   boat.visible=inBoat;
   if(inBoat){
-    boat.position.set(P.x-Math.sin(heading)*.9,boatRise,P.z-Math.cos(heading)*.9);
+    boat.position.set(P.x-Math.sin(heading)*1.48,boatRise,P.z-Math.cos(heading)*1.48);
     boat.rotation.set(0,heading,Math.sin(t*1.6)*.03);
     const stroke=moving?t*3.6:0;
-    playerOar.rotation.set(Math.sin(stroke)*.63,0,1.08+Math.cos(stroke)*.21);
+    boatman.man.rotation.x=.07*Math.sin(stroke);
+    boatman.oar.rotation.set(.26+.52*Math.sin(stroke),.12,.88+.22*Math.cos(stroke));
   }
   // 水鳥
   for(let i=birds.length-1;i>=0;i--){ const b=birds[i]; b.userData.life+=dt; b.position.addScaledVector(b.userData.v,dt); b.userData.p+=dt*14; const f=Math.sin(b.userData.p)*0.7; b.userData.wl.rotation.z=f; b.userData.wr.rotation.z=-f; if(b.userData.life>6){ scene.remove(b); birds.splice(i,1);} }

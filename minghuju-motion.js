@@ -578,14 +578,132 @@
   }
 
   function mountainWind(ctx,pixels,time) {
-    const veil = smooth(time/.7)*(1-smooth((time-5)/1.2));
+    const veil = smooth(time/.7)*(1-smooth((time-7.4)/.8));
     const crowns = [[106,63,100,34,.1],[133,96,79,26,.65],[76,295,108,37,.46],
-      [180,373,91,28,.84],[265,218,62,21,.33],[324,105,31,15,.52]];
+      [180,373,91,28,.84],[265,218,62,21,.33],[324,105,31,15,.52],
+      [512,144,30,20,.26],[571,168,42,22,.72],[641,199,50,24,.51],[715,216,36,24,.94]];
     for (const [x,y,rx,ry,phase] of crowns) {
       const wind = veil*(Math.sin(2.4*time+phase)*2.7+Math.sin(4.1*time+phase)*1.1);
       warp(ctx,pixels,[x,y,rx,ry],(column,row)=>[
         wind*(.6+.4*smooth((column-x+rx)/rx)),wind*.55*(1-smooth((row-y+8)/24))
       ]);
+    }
+    const climb = smooth(time/8.4);
+    const scale = 1.12+.34*climb;
+    const cropWidth = width/scale;
+    const cropHeight = height/scale;
+    ctx.drawImage(ctx.canvas,(width-cropWidth)*climb,(height-cropHeight)*(1-climb),
+      cropWidth,cropHeight,0,0,width,height);
+  }
+
+  const lakeSurface = new Path2D('M 183 217 L 764 217 L 764 508 L 335 508 Q 292 398 319 278 L 245 266 Z');
+  function autumnBreeze(ctx,pixels,time,layers,image) {
+    const sx = image.naturalWidth/width;
+    const sy = image.naturalHeight/height;
+    const breeze = smooth(time/.9)*(1-smooth((time-5.1)/1.0));
+    ctx.save();
+    ctx.clip(lakeSurface);
+    for(let y=218;y<height;y+=3) {
+      const depth = (y-218)/(height-218);
+      const ripple = breeze*(.85+2.2*depth)*(Math.sin(y*.137-time*3.8)+.48*Math.sin(y*.063-time*5.2));
+      ctx.drawImage(image,(175-ripple)*sx,y*sy,589*sx,Math.min(3,height-y)*sy,
+        175,y,589,Math.min(3,height-y));
+    }
+    ctx.lineCap='round';
+    for(let i=0;i<8;i++){
+      const travels = (time*.15+i*.147)%1;
+      const x = 245+490*travels;
+      const y = 233+(i*39)%246+6*Math.sin(time*1.2+i);
+      ctx.strokeStyle='rgba(252,232,194,'+(breeze*Math.sin(Math.PI*travels)*(.09+i*.006))+')';
+      ctx.lineWidth=.7+i*.14;
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.quadraticCurveTo(x+22,y-1,x+45+i*3,y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function glint(ctx,x,y,radius,level,tint) {
+    if (level<=0) return;
+    const glow = ctx.createRadialGradient(x,y,0,x,y,radius);
+    const core = 'rgba('+tint+',';
+    glow.addColorStop(0,core+level+')');
+    glow.addColorStop(.19,core+(level*.53)+')');
+    glow.addColorStop(.58,core+(level*.17)+')');
+    glow.addColorStop(1,core+'0)');
+    ctx.save();
+    ctx.globalCompositeOperation='screen';
+    ctx.fillStyle=glow;
+    ctx.fillRect(x-radius,y-radius,radius*2,radius*2);
+    ctx.strokeStyle=glow;
+    ctx.lineWidth=1.3;
+    ctx.beginPath();
+    ctx.moveTo(x-radius,y);
+    ctx.lineTo(x+radius,y);
+    ctx.moveTo(x,y-radius);
+    ctx.lineTo(x,y+radius);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function twinkle(ctx,pixels,time) {
+    const strength = Math.pow(.5-.5*Math.cos(time*3.72),2);
+    glint(ctx,384,120,17+strength*21,strength*.82,'208,230,255');
+  }
+
+  const gemSurface = new Path2D('M 528 251 A 141 140 0 1 1 246 251 A 141 140 0 1 1 528 251 Z');
+  function gemSheen(ctx,pixels,time) {
+    const pulse = .5-.5*Math.cos(time*2.55);
+    ctx.save();
+    ctx.clip(gemSurface);
+    const shine = ctx.createLinearGradient(250+65*pulse,310,485+60*pulse,112);
+    shine.addColorStop(0,'rgba(255,221,169,0)');
+    shine.addColorStop(.48,'rgba(225,216,255,'+(pulse*.27)+')');
+    shine.addColorStop(.68,'rgba(255,241,221,'+(pulse*.3)+')');
+    shine.addColorStop(1,'rgba(255,241,221,0)');
+    ctx.globalCompositeOperation='screen';
+    ctx.fillStyle=shine;
+    ctx.fillRect(246,108,284,282);
+    glint(ctx,458,180,12+17*pulse,pulse*.57,'255,250,227');
+    ctx.restore();
+  }
+
+  function silverRoll(ctx,pixels,time) {
+    const settle = smooth(time/.62)*(1-smooth((time-4.4)/1.2));
+    const swing = settle*Math.sin(time*3.25);
+    warp(ctx,pixels,[383,220,302,142],(x,y)=>{
+      const ball = x<383?300:469;
+      const near = 1-smooth((Math.abs(x-ball)-72)/52);
+      return [(13*swing+.06*swing*(216-y))*near,-.048*swing*(x-ball)*near];
+    });
+    const sparkle = .5-.5*Math.cos(time*3.75);
+    glint(ctx,321-9*swing,173+2*swing,15+6*sparkle,sparkle*.74,'235,245,255');
+    glint(ctx,485-10*swing,185+2*swing,18,(1-sparkle)*.68,'236,245,255');
+    glint(ctx,542+5*swing,333,16,sparkle*.4,'222,237,255');
+  }
+
+  function lingeringEcho(ctx,pixels,time) {
+    const rings = [[394,115,221,45,-.17],[355,151,149,32,-.11]];
+    const linger = smooth(time/.55)*(1-smooth((time-5.2)/1.55));
+    for(const [index,[x,y,rx,ry,tilt]] of rings.entries()){
+      const angle = time*(index ? .88 : 1.17)+index*2.1;
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(tilt);
+      ctx.globalCompositeOperation='screen';
+      ctx.lineCap='round';
+      for(let i=0;i<23;i++){
+        const tail = i/23;
+        const start = angle-1.68*(1-tail);
+        ctx.strokeStyle='rgba(255,208,122,'+(linger*tail*tail*.82)+')';
+        ctx.lineWidth=1.1+tail*1.7;
+        ctx.beginPath();
+        ctx.ellipse(0,0,rx,ry,0,start,start+.085);
+        ctx.stroke();
+      }
+      glint(ctx,rx*Math.cos(angle),ry*Math.sin(angle),20,linger*.65,'255,222,151');
+      ctx.restore();
     }
   }
 
@@ -622,14 +740,19 @@
       recording:'minghuju-oriole-call.wav', independentSound:true, sound:(audio,clip)=>clip?[playBuffer(audio,clip,.62,.42)]:[]},
     'swallow': {duration:4.2, paint:(ctx,pixels,time,layers)=>bird(ctx,time,layers,true), background:'swallow',
       recording:'minghuju-swallow-call.wav', independentSound:true, sound:(audio,clip)=>clip?[playBuffer(audio,clip,.54,1.8)]:[]},
+    'autumn-water': {duration:6.2, paint:autumnBreeze},
+    'cold-star': {duration:6.75, paint:twinkle},
+    'gem': {duration:7.4, paint:gemSheen},
+    'quicksilver': {duration:5.65, paint:silverRoll, readsPixels:true},
     'silver-wire': {duration:3.4, paint:steelWire},
-    'taishan': {duration:6.3, paint:mountainWind, readsPixels:true},
+    'taishan': {duration:8.4, paint:mountainWind, readsPixels:true},
     'thunder': {duration:5.7, paint:lightning, sound:playThunder, recording:'minghuju-thunder-call.wav'},
     'jade-plate': {duration:3.9, paint:pearls, sound:playPearls},
     'mountain-serpent': {duration:5.3, paint:serpent, background:'serpent'},
     'underground-tone': {duration:3.5, paint:underground, sound:playRise},
     'fireworks': {duration:3.9, paint:fireworks, sound:playFireworks},
     'applause': {duration:5, paint:clapping, readsPixels:true, sound:playCheering, recording:'minghuju-cheering.mp3'},
+    'echo': {duration:6.75, paint:lingeringEcho},
     'forgotten-meal': {duration:3.8, paint:shakeHead, readsPixels:true}
   };
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -678,7 +801,7 @@
         if (!active) return;
         const elapsed = Math.min(scene.duration,(now-startTime)/1000);
         ctx.drawImage(backdrop,0,0,width,height);
-        scene.paint(ctx,pixels,elapsed,layers);
+        scene.paint(ctx,pixels,elapsed,layers,backdrop);
         if (elapsed<scene.duration) frame = requestAnimationFrame(draw);
       }
       frame = requestAnimationFrame(draw);
