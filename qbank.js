@@ -184,6 +184,33 @@ var EVIDENCE={
 };
 // Claude 原版各題庫的題目數量。前段為逐題核對過的原版題，新增題一律附在後段。
 var ORIGINAL_COUNTS={"pro":9,"que":4,"lixia":6,"tieA":6,"tieM":8,"song":4,"tieW":5,"tieR":5,"shui":6,"he":6,"gate":3,"gateQF":1,"hall":1,"east":1,"corr":3,"shuiB":1,"finQ":2,"fin":6};
+var ROTATION_ADDITIONS={
+ hall:[
+  {q:'老殘進入鐵公祠大門後，正面先看見哪一座建築？',o:['鐵公享堂','歷下亭','古水仙祠','高陞店'],hl:'進了大門，正面便是鐵公享堂',why:'作者以站在大門內的老殘為觀察位置，交代正面是鐵公享堂。'},
+  {q:'「正面便是鐵公享堂」與「朝東便是一個荷池」合看，作者怎樣安排這兩處景物？',o:['從門內的位置，用觀看方向交代兩處景物','先寫較舊的建築，再寫較新的水池','依照建造年代，說明兩處景物的歷史','先寫湖上遠景，再寫山頂寺廟的近景'],hl:'進了大門，正面便是鐵公享堂，朝東便是一個荷池',why:'「正面」與「朝東」都以進門後的位置交代景物的相對方位。'},
+  {q:'若畫鐵公祠內的簡圖，哪項資訊可直接根據課文標示？',o:['從大門往正面看是享堂，朝東有荷池','從大門往正面看是荷池，朝西有享堂','從大門往正面看是舊房，朝北有享堂','從大門往正面看是圓門，朝南有荷池'],hl:'正面便是鐵公享堂，朝東便是一個荷池',why:'課文明寫享堂在進門後的正面，荷池在東邊，其他三項都改動了景物與方向。'}
+ ],
+ east:[
+  {q:'「朝東便是一個荷池」在這段中，主要提供什麼資訊？',o:['荷池相對於進門位置的方位','荷池開放遊人的固定時刻','荷池在一年中開花的季節','荷池最適合觀看的天氣'],hl:'朝東便是一個荷池',why:'「朝東」交代觀看的方向，使讀者知道荷池的相對位置。'},
+  {q:'課文先寫享堂，再寫荷池，接著用哪一個動作帶出後面的景物？',o:['繞著曲折的迴廊','抬頭仰望山上的僧樓','登上享堂後面的山坡','乘船穿過祠前的蘆葦'],hl:'繞著曲折的迴廊，到了荷池東面',why:'荷池之後，老殘沿曲折迴廊移動，才看見東面的圓門與舊房。'},
+  {q:'如果把「朝東」刪去，只留下「便是一個荷池」，讀者最直接少了哪種線索？',o:['老殘往哪個方向看見荷池','荷池與街市之間的距離','荷池裡每一株荷花的顏色','老殘抵達荷池的確切時刻'],hl:'朝東便是一個荷池',why:'「朝東」交代觀看方位，刪去後就少了將荷池放入空間位置的線索。'}
+ ],
+ shuiB:[
+  {q:'圓門東邊的三間舊房，作者用什麼線索讓讀者確認其名稱？',o:['破匾上題著「古水仙祠」','門前立著「鐵公享堂」石碑','窗邊掛著「高陞店」的招牌','堂上刻著「歷下亭」的亭名'],hl:'有個破匾，上題「古水仙祠」四個字',why:'老殘先看見舊房，再由破匾上的文字知道這裡是古水仙祠。'},
+  {q:'哪一組景物都屬於老殘在古水仙祠前看見的內容？',o:['三間舊房、破匾、破舊對聯','山頂僧樓、蒼松、翠柏','湖中倒影、蘆花、斜陽','城內住家、泉水、垂柳'],hl:'圓門東邊有三間舊房，有個破匾',why:'原文在此連寫舊房、破匾和祠前的破舊對聯，其他選項分屬山景、湖景與濟南街景。'},
+  {q:'「三間舊房」與「有個破匾」兩個細節放在一起，最能讓人想像這座祠的什麼樣貌？',o:['屋舍與匾額都顯出年久的痕跡','屋舍正在整修，匾額剛剛漆好','屋舍十分華麗，匾額鑲滿金玉','屋舍已經倒塌，匾額沉入水底'],hl:'圓門東邊有三間舊房，有個破匾',why:'「舊」與「破」共同寫出年久的外觀，課文沒有說屋舍正在整修或已經倒塌。'}
+ ],
+ finQ:[
+  {q:'「一面吃著，一面船已到了鵲華橋畔」寫出哪兩件事同時進行？',o:['老殘吃蓮蓬，船沿湖回到橋邊','老殘開船，船家在客店吃晚飯','老殘吃點心，小藥童登山看景','老殘摘蓮花，船家進祠堂進香'],hl:'一面吃著，一面船已到了鵲華橋畔了',why:'兩個「一面」把吃蓮蓬與行船回程連在一起，呈現悠閒的旅程收尾。'},
+  {q:'結尾「船已到了鵲華橋畔」中的「已」，配合前面的吃蓮蓬動作，讓人感到怎樣的旅程節奏？',o:['吃著蓮子，不覺間就已回到出發處','忙著趕路，必須在天亮之前離開','一再停船，始終無法抵達目的地','遇上暴雨，只能在橋邊等待救援'],hl:'老殘隨手摘了幾個蓮蓬，一面吃著',why:'「隨手」與「一面吃著」寫遊賞的從容，「已到了」則使回到橋邊顯得自然順暢。'},
+  {q:'回程前，作者依序寫擦船的荷葉、驚起的水鳥與摘取的蓮蓬，主要呈現什麼？',o:['船在荷叢前進時接連遇到的景象','老殘在客店回想前一天的夢境','居民在湖邊舉行祭典時的準備','船家依照四季安排捕魚的次序'],hl:'兩邊荷葉荷花將船夾住',why:'擦船、驚鳥和摘蓮蓬都隨行船接連發生，讓回程的景象有聲音和動作。'},
+  {q:'如果替這趟遊湖畫最後一格，哪個畫面符合課文結尾？',o:['老殘手裡拿著蓮蓬，小船靠近鵲華橋','老殘登上千佛山，小船停在山頂寺廟','老殘離開高陞店，小船駛向江南城外','老殘坐在享堂裡，小船停在荷池中央'],hl:'船已到了鵲華橋畔了',why:'結尾寫老殘邊吃蓮蓬邊回到鵲華橋，旅程回到出發的地方。'}
+ ]
+};
+Object.entries(ROTATION_ADDITIONS).forEach(function([pool,items]){
+  var next=Q[pool].reduce(function(max,q,i){return Math.max(max,q.savedIndex??i);},-1)+1;
+  items.forEach(function(q){q.savedIndex=next++; Q[pool].push(q);});
+});
 var ORIGINAL_EVIDENCE={
   "que": [
     1,
@@ -250,17 +277,69 @@ Object.entries(ORIGINAL_EVIDENCE).forEach(function([pool, [index, station, evide
   Object.assign(Q[pool][index], {station, evidencePrompt, evidence});
 });
 
-function drawQuiz(pool, count, shuffle) {
-  var bank=Q[pool]||[];
-  var originalCount=ORIGINAL_COUNTS[pool]||0;
-  var original=bank.slice(0,originalCount);
+var ROTATION_KEY='minghu_question_rotation_v1';
+var history=[];
+try{var stored=JSON.parse(localStorage.getItem(ROTATION_KEY)||'[]');if(Array.isArray(stored))history=stored.filter(function(text){return typeof text==='string';});}catch(e){}
+var currentDraws=new Map();
+var roundQuestions=new Set();
+function resetDraws(){currentDraws.clear();roundQuestions.clear();}
+function saveDraws(){return Array.from(currentDraws,function([slot,items]){return [slot,items.map(function(q){return q._id;})];});}
+function restoreDraws(saved,answeredIds){
+  resetDraws();
+  (answeredIds||[]).forEach(function(id){
+    var q=BYID[id];if(!q)return;
+    roundQuestions.add(q.q);
+    var parts=id.split('.');
+    if(parts[0]==='word'&&WORDK[parts[1]])currentDraws.set('word:'+WORDK[parts[1]],[q]);
+    if(parts[0]==='task'&&TASKN[parts[1]])currentDraws.set('task:'+TASKN[parts[1]],[q]);
+  });
+  if(!Array.isArray(saved))return;
+  saved.forEach(function(entry){
+    if(!Array.isArray(entry)||typeof entry[0]!=='string'||!Array.isArray(entry[1]))return;
+    var items=entry[1].map(function(id){return BYID[id];}).filter(Boolean);
+    if(items.length!==entry[1].length)return;
+    currentDraws.set(entry[0],items);
+    items.forEach(function(q){roundQuestions.add(q.q);});
+  });
+}
+function drawSingle(pool,count,shuffle,slot){
+  if(currentDraws.has(slot)) return currentDraws.get(slot);
+  var available=(Q[pool]||[]).filter(function(q){return !q.evidence&&!roundQuestions.has(q.q);});
+  if(available.length<count) throw new Error('Insufficient unused questions in '+pool);
+  var fresh=available.filter(function(q){return !history.includes(q.q);});
+  var picks=shuffle(fresh).slice(0,count);
+  if(picks.length<count){
+    var remaining=available.filter(function(q){return !picks.includes(q);});
+    var oldest=Math.min(...remaining.map(function(q){return history.indexOf(q.q);}));
+    while(picks.length<count){
+      var group=remaining.filter(function(q){return history.indexOf(q.q)===oldest;});
+      picks.push(...shuffle(group).slice(0,count-picks.length));
+      remaining=remaining.filter(function(q){return !picks.includes(q);});
+      oldest=Math.min(...remaining.map(function(q){return history.indexOf(q.q);}));
+    }
+  }
+  picks.forEach(function(q){
+    roundQuestions.add(q.q);
+    history=history.filter(function(text){return text!==q.q;});
+    history.push(q.q);
+  });
+  try{localStorage.setItem(ROTATION_KEY,JSON.stringify(history.slice(-1000)));}catch(e){}
+  currentDraws.set(slot,picks);
+  return picks;
+}
+function drawQuiz(pool,count,shuffle){
   var pair=ORIGINAL_EVIDENCE[pool];
-  var featured=pair && original[pair[0]];
-  var result=featured && count>0 ? [featured] : [];
-  var remaining=count-result.length;
-  if(remaining>0) result.push(...shuffle(original.filter(function(q){ return q!==featured; })).slice(0,remaining));
-  if(result.length<count) result.push(...shuffle(bank.slice(originalCount)).slice(0,count-result.length));
-  return result;
+  var featured=pair&&Q[pool][pair[0]];
+  var result=featured&&count>0?[featured]:[];
+  var singles=drawSingle(pool,count-result.length,shuffle,'quiz:'+pool);
+  return result.concat(singles);
+}
+var ACTIVITY_POOLS={
+ word:{lixia:'que',tie:'tieA',he:'he',end:'finQ'},
+ task:{couplet:'lixia',colors:'tieM',colormean:'tieM',lookdown:'tieW',hang:'fin',sound:'he',route:'fin'}
+};
+function drawActivity(type,key,shuffle){
+  return drawSingle(ACTIVITY_POOLS[type][key],1,shuffle,type+':'+key)[0];
 }
 
 // 幫每一題編號：題庫序號 p、題內序號 i。savedIndex 保留刪題前的存檔題號。
@@ -271,7 +350,7 @@ WORDK.forEach(function(k,i){ tag(WORDQ[k],POOLS.indexOf('word'),i); });
 TASKN.forEach(function(k,i){ tag(TASKQ[k],POOLS.indexOf('task'),i); });
 Object.values(EVIDENCE).forEach(function(q,i){ tag(q,POOLS.indexOf('evidence'),i); });
 // 每個題庫每次遊戲抽幾題（老師頁用來估計「被抽到的人數」）
-var DRAW={pro:2,que:1,lixia:2,tieA:2,tieM:2,song:1,tieW:1,tieR:1,shui:2,he:2,gate:1,gateQF:1,hall:1,east:1,corr:1,shuiB:1,finQ:2,fin:3,word:4,task:7};
+var DRAW={pro:2,que:2,lixia:3,tieA:3,tieM:4,song:1,tieW:2,tieR:1,shui:2,he:4,gate:1,gateQF:1,hall:1,east:1,corr:1,shuiB:1,finQ:3,fin:5,word:0,task:0};
 // 成績碼：MH1-xxxxx（只含班級、座號、對錯，沒有姓名）
 DRAW.evidence=0;
 var AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -287,6 +366,6 @@ function decode(code){ var m=/MH1-([A-Z2-9]+)/.exec(String(code).toUpperCase());
   var pos=0; function r(n){ var v=parseInt(bits.substr(pos,n),2); pos+=n; return v; }
   var o={cls:r(10),seat:r(7),total:r(7),right:r(7),ch:!!r(1),wrong:[]}; var n=r(6);
   for(var k=0;k<n;k++){ var p=r(5), i=r(4); o.wrong.push(POOLS[p]+'.'+i); } o.code='MH1-'+s; return o; }
-window.MH={PASSAGE:PASSAGE,OPENING:OPENING,NOTES:NOTES,Q:Q,EVIDENCE:EVIDENCE,POOLS:POOLS,WORDQ:WORDQ,WORDK:WORDK,TASKN:TASKN,TASKQ:TASKQ,BYID:BYID,DRAW:DRAW,drawQuiz:drawQuiz,encode:encode,decode:decode,
+window.MH={PASSAGE:PASSAGE,OPENING:OPENING,NOTES:NOTES,Q:Q,EVIDENCE:EVIDENCE,POOLS:POOLS,WORDQ:WORDQ,WORDK:WORDK,TASKN:TASKN,TASKQ:TASKQ,BYID:BYID,DRAW:DRAW,drawQuiz:drawQuiz,drawActivity:drawActivity,resetDraws:resetDraws,saveDraws:saveDraws,restoreDraws:restoreDraws,encode:encode,decode:decode,
   FORM_URL:''};   // ← 老師的 Google 表單網址（填了以後，遊戲結尾會出現「開啟表單」按鈕）
 })();

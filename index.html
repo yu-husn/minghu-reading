@@ -312,7 +312,7 @@ body.vnfull #compass{display:none}
   </fieldset>
   <div class="start-guide">
   <p><strong>計分方式</strong>：共有 38 題，每題 2.5 分，合計 95 分。抓蓮蓬小遊戲最多可得 5 分，總分 100 分。</p>
-  <p><strong>出題方向：</strong>各站優先從原版題庫隨機抽題。每輪有 6 題要先選答案，再找支持答案的課文文句。其餘 32 題完成作答即可。每題首次答對得 2.5 分，兩步題須兩步都首次答對。第一次答錯會出現提示，每題可重答一次，結束後可查看正解和解析。</p>
+  <p><strong>出題方向：</strong>每題首次答對得 2.5 分。每輪有 6 題「課文證據題」，要先選答案，並找出支持答案的課文文句，兩步都首次答對才得分。其餘 32 題完成作答即可，各站隨機抽題，題庫抽完前會避開這台裝置已抽過的題目。第一次答錯會出現提示，每題可以重答一次，結束後可以查看正解和解析。</p>
   <p><strong>你的任務</strong>：扮演遊戲中的小藥童。每收集一段湖景，就揭開<strong>《明湖長卷》</strong>的一格。集滿<strong>八段湖景</strong>後，回到鵲華橋展開整幅長卷。小藥童是為各位同學設計的角色，課文中並未出現，作答時請以課文原文為依據。</p>
   <p><strong>怎麼前進</strong>：點地面走路、點湖面搭船，也可用右下角方向鈕或鍵盤。跟著紅箭頭前進；找不到路時，點左下角<strong>「請帶路」</strong>。</p>
   <p>有配樂和漁歌，建議戴耳機或打開聲音 🔊（右上角可以關配樂）<br>配樂 <a href="https://pixabay.com/music/china-chinese-oriental-tune-05-12063/" target="_blank" rel="noopener noreferrer">Chinese Oriental Tune 05</a> · AntipodeanWriter</p>
@@ -322,7 +322,7 @@ body.vnfull #compass{display:none}
 
 <script src="vendor/three.min.js"></script>
 <script src="vendor/Reflector.js"></script>
-<script src="qbank.js?v=original-first"></script>
+<script src="qbank.js?v=rotating-questions"></script>
 <script>
 (function(){
 const T = THREE;
@@ -1319,7 +1319,7 @@ function makeAudioSource(context,buffer,destination,volume,loop=false){
   return {source,gain};
 }
 function musicGain(){
-  if(MUS.bus) MUS.bus.gain.setTargetAtTime(MUS.on?dBToGain(-13)*MUS.duck:0,AC.currentTime,.17);
+  if(MUS.bus) MUS.bus.gain.setTargetAtTime(MUS.on?dBToGain(-19)*MUS.duck:0,AC.currentTime,.17);
 }
 function duck(level){ MUS.duck=level; musicGain(); }
 function musLabel(){
@@ -1730,8 +1730,19 @@ function finishTask(first,picked){
     txt.innerHTML=answerDetails(question);
     quoteEl.replaceChildren();
   }
-  record(question,first,picked);
-  goBtn();
+  const readingQuestion=MH.drawActivity('task',curTask,shuffle);
+  const button=document.createElement('button');
+  button.className='go';
+  button.type='button';
+  button.textContent='閱讀挑戰 ▶';
+  button.addEventListener('click',event=>{
+    event.stopPropagation();
+    if(button.disabled) return;
+    button.disabled=true;
+    ask(readingQuestion);
+  });
+  ch.appendChild(button);
+  button.focus({preventScroll:true});
 }
 let challengeMode=false, curTask='';
 const challengeChoice=document.querySelector('input[name="reading-mode"][value="challenge"]');
@@ -2117,7 +2128,7 @@ const TASKS={
   setUpRouteExercise(routeMap,picked=>{
     routeMap.hidden=true;
     dlg.style.visibility='';
-    record(MH.TASKQ.route,picked===null,picked);
+    queue.unshift({q:MH.drawActivity('task','route',shuffle)});
     done();
   });
   routeMap.querySelector('.pl').focus();
@@ -2214,7 +2225,7 @@ canvas.addEventListener('pointerup',e=>{ if(!down) return; const moved=Math.hypo
   const hit=new T.Vector3(); if(ray.ray.intersectPlane(plane,hit)) setTarget(hit.x,hit.z); });
 
 // ---------- 開始 ----------
-document.getElementById('go').addEventListener('click',()=>{ setReadingMode(challengeChoice.checked); document.getElementById('start').hidden=true; clearSave(); ac(); musicStart();
+document.getElementById('go').addEventListener('click',()=>{ MH.resetDraws(); setReadingMode(challengeChoice.checked); document.getElementById('start').hidden=true; clearSave(); ac(); musicStart();
   playIntro(()=>{ play(SCENES.pro,()=>{ step=0; updHint(); saveGame(); }); updHint(); }); });
 
 function resize(){ renderer.setSize(innerWidth,innerHeight,false); camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
@@ -2403,10 +2414,10 @@ function checkInner(){ if(talking) return; const w=INNER[innerStep]; if(!w) retu
 
 // ---------- 湖上小遊戲：撈起課文裡的方位字 ----------
 const WORDSETS={
- lixia:{w:'朝北不遠',a:[-30,-30],b:[-6,0], q:MH.WORDQ.lixia},
- tie:{w:'向西盪去',a:[2,2],b:[44,24], q:MH.WORDQ.tie},
- he:{w:'盪到歷下亭的後面',a:[40,16],b:[0,22], q:MH.WORDQ.he},
- end:{w:'到了鵲華橋畔',a:[-8,18],b:[-28,-30], q:MH.WORDQ.end}};
+ lixia:{w:'朝北不遠',a:[-30,-30],b:[-6,0],get q(){return MH.drawActivity('word','lixia',shuffle)}},
+ tie:{w:'向西盪去',a:[2,2],b:[44,24],get q(){return MH.drawActivity('word','tie',shuffle)}},
+ he:{w:'盪到歷下亭的後面',a:[40,16],b:[0,22],get q(){return MH.drawActivity('word','he',shuffle)}},
+ end:{w:'到了鵲華橋畔',a:[-8,18],b:[-28,-30],get q(){return MH.drawActivity('word','end',shuffle)}}};
 const wordbar=document.getElementById('wordbar'); let tokens=[], wordKey=null, wordGot=0;
 function charTex(ch){ const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d');
   x.fillStyle='#4c7a5c'; x.beginPath(); x.arc(64,64,58,0.25,Math.PI*2-0.05); x.lineTo(64,64); x.fill(); x.strokeStyle='#2f4f3a'; x.lineWidth=4; x.stroke();
@@ -2508,11 +2519,12 @@ function place(el,x,y,z){ pv.set(x,y,z).project(camera); if(pv.z>1||Math.abs(pv.
 // ---------- 自動存檔：每過一站存一次；平板自己重新整理也能接著玩 ----------
 const SAVE_KEY='mh_tablet_save_v1';
 function saveGame(done){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify({t:Date.now(),done:!!done,step,mainShown,gotCards,visited,dusk,mode,innerStep,
-  challengeMode,lotusScore,ans:answered.map(a=>[a.q._id,a.first?1:0,a.picked||''])})); }catch(e){} }
+  challengeMode,lotusScore,draws:MH.saveDraws(),ans:answered.map(a=>[a.q._id,a.first?1:0,a.picked||''])})); }catch(e){} }
 function loadSave(){ try{ const v=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(v && Date.now()-v.t<8*3600e3 && v.step>=0) return v; }catch(e){} return null; }
 function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 function savedChallengeMode(v){ return v.challengeMode??Boolean(v.ch?.on); }
 function resumeGame(v){ setReadingMode(v.done?savedChallengeMode(v):challengeChoice.checked); step=v.step; mainShown=!!v.mainShown; Object.assign(visited,v.visited||{}); dusk=duskNow=v.dusk||0;
+  MH.restoreDraws(v.draws,(v.ans||[]).map(answer=>answer[0]));
   Object.keys(v.gotCards||{}).forEach(revealScrollSection);
   (v.ans||[]).forEach(([id,f,p])=>{ const q=MH.BYID[id]; if(q) answered.push({q,first:!!f,picked:p}); });
   if(typeof v.lotusScore==='number') lotusScore=Math.max(0,Math.min(LOTUS_LIMIT,Math.trunc(v.lotusScore)));
